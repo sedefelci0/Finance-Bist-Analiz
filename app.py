@@ -16,6 +16,8 @@ providers/news_provider.py üzerinden üç kaynağı (yfinance, KAP, Google News
 """
 from __future__ import annotations
 
+import subprocess
+
 import pandas as pd
 import streamlit as st
 from sqlalchemy import text
@@ -24,6 +26,27 @@ from db import connection as db
 from providers import news_provider
 
 st.set_page_config(page_title="BIST Alpha Score", page_icon="📊", layout="wide")
+
+
+@st.cache_resource
+def _ensure_playwright_browser() -> None:
+    """KAP bildirimleri Playwright/Chromium gerektiriyor (bkz. news_provider.py).
+
+    `pip install playwright` sadece kütüphaneyi kurar, tarayıcı BİNARİSİNİ
+    kurmaz — bu normalde ayrı bir `playwright install chromium` komutuyla
+    yapılır. Streamlit Community Cloud'da bunu deploy sırasında otomatik
+    çalıştıracak bir kanca yok (packages.txt sadece apt paketleri kabul
+    ediyor), o yüzden uygulama kendi başlangıcında (süreç başına BİR KEZ,
+    st.cache_resource sayesinde) tarayıcının kurulu olduğundan emin oluyor.
+    Zaten kuruluysa `playwright install` hızlıca no-op döner.
+    """
+    try:
+        subprocess.run(["playwright", "install", "chromium"], check=False, timeout=180)
+    except Exception:
+        pass  # KAP bölümü olmadan da uygulamanın geri kalanı çalışmaya devam etsin
+
+
+_ensure_playwright_browser()
 
 # scoring/pillars.py::PILLAR_WEIGHTS ile aynı sabit sıra — kategorik renkler
 # bu sıraya göre atanıyor, veriye göre değil (dataviz ilkesi: sabit sıra).
