@@ -19,18 +19,37 @@ load_dotenv()
 _SCHEMA_PATH = Path(__file__).parent / "schema.sql"
 
 
+def _get_config(key: str, default: str = "") -> str:
+    """Önce Streamlit Cloud'un st.secrets'ına, yoksa ortam değişkenlerine (.env) bakar.
+
+    CLI scriptleri (calculate_score.py vb.) streamlit kurulu olmadan da
+    çalışabilmeli — bu yüzden streamlit importu try/except içinde, sert bir
+    bağımlılık değil. Streamlit Cloud'daki "Secrets" TOML alanının os.environ'a
+    otomatik yansıyıp yansımadığı belgelerde net değildi, bu fonksiyon o
+    belirsizliği ortadan kaldırıyor.
+    """
+    try:
+        import streamlit as st
+
+        if key in st.secrets:
+            return str(st.secrets[key])
+    except Exception:
+        pass
+    return os.environ.get(key, default)
+
+
 def get_engine() -> Engine:
-    """.env içindeki DB_* değişkenlerinden SQLAlchemy engine oluşturur.
+    """DB_* ayarlarından SQLAlchemy engine oluşturur (bkz. _get_config).
 
     DB_SSLMODE (opsiyonel) Neon gibi SSL zorunlu koşan sağlayıcılar için —
     boşsa hiç eklenmez (yerel PostgreSQL'de genelde gerekmez).
     """
-    host = os.environ.get("DB_HOST", "localhost")
-    port = os.environ.get("DB_PORT", "5432")
-    name = os.environ.get("DB_NAME", "bist_analiz")
-    user = quote_plus(os.environ.get("DB_USER", "postgres"))
-    password = quote_plus(os.environ.get("DB_PASSWORD", ""))
-    sslmode = os.environ.get("DB_SSLMODE")
+    host = _get_config("DB_HOST", "localhost")
+    port = _get_config("DB_PORT", "5432")
+    name = _get_config("DB_NAME", "bist_analiz")
+    user = quote_plus(_get_config("DB_USER", "postgres"))
+    password = quote_plus(_get_config("DB_PASSWORD", ""))
+    sslmode = _get_config("DB_SSLMODE")
 
     url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{name}"
     if sslmode:
