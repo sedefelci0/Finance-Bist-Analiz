@@ -1,9 +1,16 @@
 """BIST Alpha Score — web arayüzü.
 
-Uygulama katmanı sadece veritabanını okur (canlı yfinance/KAP API'lerine
-bağlanmaz) — proje mimarisinin "Data Provider -> Normalizer -> Database ->
-Score Engine -> [bu katman]" zincirindeki son halka. Skorları güncellemek
-için scripts/calculate_alpha_score.py'yi ayrıca çalıştırmanız gerekir.
+Skorlar için uygulama katmanı sadece veritabanını okur (canlı yfinance/KAP
+API'lerine bağlanmaz) — proje mimarisinin "Data Provider -> Normalizer ->
+Database -> Score Engine -> [bu katman]" zincirindeki son halka. Skorları
+güncellemek için scripts/calculate_alpha_score.py'yi ayrıca çalıştırmanız
+gerekir.
+
+İSTİSNA: Hisse detayı panelindeki "Güncel Haberler / Bildirimler" bölümü
+bilinçli olarak bu kuralın dışında — skorlama pipeline'ının parçası değil,
+veritabanına hiçbir şey yazmıyor, sadece tıklandığında anlık (canlı) olarak
+providers/news_provider.py üzerinden üç kaynağı (yfinance, KAP, Google News)
+çekip gösteriyor.
 
 Çalıştırma: streamlit run app.py
 """
@@ -14,6 +21,7 @@ import streamlit as st
 from sqlalchemy import text
 
 from db import connection as db
+from providers import news_provider
 
 st.set_page_config(page_title="BIST Alpha Score", page_icon="📊", layout="wide")
 
@@ -33,6 +41,58 @@ _PILLAR_COLORS = {
     "valuation": "#eb6834",      # orange
     "size": "#eda100",           # yellow
 }
+
+
+@st.cache_data(ttl=1800)  # 30 dakika — KAP taraması (Playwright) yavaş, gereksiz tekrar taramayı önle
+def load_news(ticker: str) -> dict[str, list[dict]]:
+    """Bir ticker için üç kaynaktan da haberleri/bildirimleri çeker.
+
+    Kaynaklardan biri boş/hatalı dönerse news_provider zaten sessizce boş
+    liste döndürüyor (bkz. o modüldeki hata yönetimi) — burada ek try/except
+    gerekmiyor, çağıran taraf (render_news_section) boş listeyi "bulunamadı"
+    mesajına çevirir.
+    """
+    company_name = news_provider.get_company_name(ticker)
+    return {
+        "yfinance": news_provider.fetch_yfinance_news(ticker),
+        "kap": news_provider.fetch_kap_disclosures(ticker),
+        "google": news_provider.fetch_google_news_rss(company_name),
+    }
+
+
+def render_news_list(items: list[dict], empty_message: str) -> None:
+    if not items:
+        st.caption(empty_message)
+        return
+    for item in items:
+        date_text = item["date"].strftime("%d.%m.%Y %H:%M") if item["date"] else "tarih yok"
+        title = item["title"]
+        if item.get("url"):
+            st.markdown(
+                f"<a href='{item['url']}' target='_blank'>{title}</a>"
+                f"<br><span style='color:gray;font-size:0.85em'>{item['source']} — {date_text}</span>",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(f"{title}  \n<span style='color:gray;font-size:0.85em'>{item['source']} — {date_text}</span>", unsafe_allow_html=True)
+        st.markdown("---")
+
+
+def render_news_section(ticker: str) -> None:
+    st.subheader("📰 Güncel Haberler / Bildirimler")
+    with st.spinner("Haberler yükleniyor..."):
+        news = load_news(ticker)
+
+    n1, n2, n3 = st.columns(3)
+    with n1:
+        st.markdown("**Yahoo Finance**")
+        render_news_list(news["yfinance"], "Bu kaynakta güncel haber bulunamadı.")
+    with n2:
+        st.markdown("**KAP Bildirimleri**")
+        render_news_list(news["kap"], "Bu kaynakta güncel bildirim bulunamadı.")
+    with n3:
+        st.markdown("**Google News**")
+        render_news_list(news["google"], "Bu kaynakta güncel haber bulunamadı.")
 
 
 @st.cache_data(ttl=300)
@@ -164,6 +224,9 @@ def main() -> None:
                 score_text = f"{score:.0f}/100" if pd.notna(score) else "veri yok"
                 with st.expander(f"{_PILLAR_LABELS[p]} — {score_text}"):
                     st.write(ticker_rows.loc[p, "notes"])
+
+        st.divider()
+        render_news_section(selected)
 
 
 if __name__ == "__main__":
