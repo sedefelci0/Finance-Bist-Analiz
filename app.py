@@ -75,11 +75,10 @@ def load_news(ticker: str) -> dict[str, list[dict]]:
     gerekmiyor, çağıran taraf (render_news_section) boş listeyi "bulunamadı"
     mesajına çevirir.
     """
-    company_name = news_provider.get_company_name(ticker)
     return {
         "yfinance": news_provider.fetch_yfinance_news(ticker),
         "kap": news_provider.fetch_kap_disclosures(ticker),
-        "google": news_provider.fetch_google_news_rss(company_name),
+        "google": news_provider.fetch_google_news_rss(ticker),
     }
 
 

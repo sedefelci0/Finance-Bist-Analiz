@@ -25,20 +25,45 @@ from providers.kap_provider import _LIST_URL, _USER_AGENT
 
 _DISCLOSURE_QUERY_URL = "https://www.kap.org.tr/tr/api/disclosure/members/byCriteria"
 _DISCLOSURE_DETAIL_URL = "https://www.kap.org.tr/tr/Bildirim/{index}"
-_GOOGLE_NEWS_RSS_URL = "https://news.google.com/rss/search?q={query}+hisse&hl=tr&gl=TR&ceid=TR:tr"
+
+
+_LEGAL_SUFFIX_RE = re.compile(r"\s*\b(A\.?\s?Ş\.?|A\.?\s?S\.?|T\.?\s?A\.?\s?Ş\.?)\s*$", re.IGNORECASE)
 
 
 def get_company_name(ticker: str) -> str:
-    """Google News araması için okunaklı şirket adı (yfinance'ten longName/shortName).
+    """Google News araması için okunaklı şirket adı (yfinance longName, tüzel ek atılmış).
 
-    Bulunamazsa çıplak ticker'a (.IS'siz) düşer — arama yine çalışır, sadece
-    şirket adıyla aramak kadar isabetli olmayabilir.
+    Bulunamazsa çıplak ticker'a (.IS'siz) düşer.
     """
     try:
         info = yf.Ticker(ticker).info
-        return info.get("longName") or info.get("shortName") or ticker.removesuffix(".IS")
+        name = info.get("longName") or info.get("shortName") or ticker.removesuffix(".IS")
+        return _LEGAL_SUFFIX_RE.sub("", name).strip()
     except Exception:
         return ticker.removesuffix(".IS")
+
+
+def get_search_name_candidates(ticker: str) -> list[str]:
+    """Google News için, en isabetliden en genele, birden fazla arama terimi adayı üretir.
+
+    Neden birden fazla: yfinance'in longName'i şirketin RESMİ unvanı
+    ("Türkiye Petrol Rafinerileri A.Ş."), ama basın genelde marka adını
+    kullanıyor ("Tüpraş") — resmi unvanla intitle: araması bazı şirketlerde
+    0 sonuç veriyor. Kesin marka adı eşlemesi elde yok, bu yüzden makul
+    varyantları sırayla deneyip ilk sonuç bulanı kullanıyoruz.
+    """
+    bare_ticker = ticker.removesuffix(".IS")
+    candidates = [get_company_name(ticker)]
+    try:
+        short_name = yf.Ticker(ticker).info.get("shortName")
+        if short_name:
+            candidates.append(_LEGAL_SUFFIX_RE.sub("", short_name).strip())
+    except Exception:
+        pass
+    candidates.append(bare_ticker)
+    # tekrarları at, sırayı koru
+    seen = set()
+    return [c for c in candidates if c and not (c in seen or seen.add(c))]
 
 
 def fetch_yfinance_news(ticker: str, limit: int = 8) -> list[dict]:
@@ -68,12 +93,11 @@ def fetch_yfinance_news(ticker: str, limit: int = 8) -> list[dict]:
     return results[:limit]
 
 
-def fetch_google_news_rss(company_name: str, limit: int = 8) -> list[dict]:
-    """Google News RSS (Türkçe) üzerinden ek haber kaynağı.
-
-    Dönüş: [{"title", "source", "date": datetime|None, "url"}, ...]
-    """
-    url = _GOOGLE_NEWS_RSS_URL.format(query=requests.utils.quote(company_name))
+def _fetch_google_news_by_query(query: str, use_intitle: bool, limit: int) -> list[dict]:
+    if use_intitle:
+        url = f'https://news.google.com/rss/search?q=intitle:"{requests.utils.quote(query)}"+hisse&hl=tr&gl=TR&ceid=TR:tr'
+    else:
+        url = f"https://news.google.com/rss/search?q={requests.utils.quote(query)}+hisse&hl=tr&gl=TR&ceid=TR:tr"
     try:
         resp = requests.get(url, headers={"User-Agent": _USER_AGENT}, timeout=15)
         resp.raise_for_status()
@@ -94,6 +118,32 @@ def fetch_google_news_rss(company_name: str, limit: int = 8) -> list[dict]:
 
     results.sort(key=lambda r: r["date"] or datetime.min, reverse=True)
     return results[:limit]
+
+
+def fetch_google_news_rss(ticker: str, limit: int = 8) -> list[dict]:
+    """Google News RSS (Türkçe) — ticker için isabetli haberleri bulana kadar sırayla dener.
+
+    Dönüş: [{"title", "source", "date": datetime|None, "url"}, ...]
+
+    intitle: araması ("şirket adı başlıkta GEÇMELİ") çok işe yarıyor — onsuz
+    Google, hisseyi sadece geçen "BIST'te bugün öne çıkanlar" tarzı çoklu
+    şirket haberlerini de "ilgili" sayıyordu. Ama yfinance'in RESMİ unvanı
+    ("Türkiye Petrol Rafinerileri A.Ş.") basının kullandığı marka adından
+    ("Tüpraş") farklı olabiliyor ve intitle: o zaman 0 sonuç veriyor — bu
+    yüzden birkaç aday terimi (longName, shortName, ticker) sırayla deniyoruz,
+    ilk sonuç bulan kazanır. Hiçbiri bulamazsa (nadir), en iyi adayla
+    intitle: OLMADAN son bir deneme yapılır — hiç sonuç göstermemektense
+    biraz gürültülü sonuç göstermek tercih edildi.
+    """
+    candidates = get_search_name_candidates(ticker)
+    for candidate in candidates:
+        results = _fetch_google_news_by_query(candidate, use_intitle=True, limit=limit)
+        if results:
+            return results
+
+    if candidates:
+        return _fetch_google_news_by_query(candidates[0], use_intitle=False, limit=limit)
+    return []
 
 
 def get_mkk_member_oid(ticker: str) -> str | None:
