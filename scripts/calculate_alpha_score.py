@@ -5,13 +5,20 @@ scripts/calculate_score.py'yi (salt Piotroski F-Score) BOZMADAN, onu Pillar 2
 script'i. bist_fscore mantığı hâlâ providers/normalizer.py + scoring/piotroski.py
 içinde, değişmedi.
 
-PEER GRUBU: Pillar 3 (Değerleme) ve Pillar 4 (Büyüklük) sektör/piyasa içi
-percentile gerektiriyor. Varsayılan davranış: data/bist_universe.txt'teki
-tüm evrenin piyasa verisi çekilir, her hedef ticker için AYNI SEKTÖRDEKİ
-(yfinance info['sector']) evren üyeleri otomatik peer grubu olur. Bu evren
-dosyası elle doğrulanmış değil (bkz. dosyadaki UYARI) — periyodik olarak
-gözden geçirin. --manual-peers ile eski davranışa (peer grubu = aynı komutta
-verdiğiniz diğer ticker'lar) dönebilirsiniz.
+PEER GRUBU: Pillar 3 (Değerleme) ve Pillar 4 (Büyüklük) percentile hesabı
+için İKİ FARKLI peer grubu kullanır — ikisi de aynı grubu kullanmıyor:
+  - Değerleme: AYNI SEKTÖRDEKİ (yfinance info['sector']) evren üyeleri —
+    PE/PB gibi çarpanlar sektörler arası doğrudan kıyaslanamaz.
+  - Büyüklük: TÜM evren — "küçük şirket primi" literatürde piyasanın
+    tamamına göre tanımlanır, sektöre göre değil. (Önceden ikisi de sektör
+    bazlıydı; bu, sektöründe yalnız olan şirketlerin — örn. TUPRS, evrendeki
+    tek "Energy" şirketi — Büyüklük'te anlamsız bir nötr "50" almasına
+    yol açıyordu.)
+Evren, providers/sector_peers.py::load_universe() üzerinden gelir (öncelik:
+Borsa İstanbul'un güncel Yıldız Pazar CSV'si, o erişilemezse statik
+data/bist_universe.txt'e düşer). --manual-peers ile eski davranışa (peer
+grubu = aynı komutta verdiğiniz diğer ticker'lar, iki pillar için de aynı)
+dönebilirsiniz.
 
 Veri akışı: normalizer (finansal kalemler) + yfinance_provider (piyasa
 verisi + fiyat getirisi) + providers/sector_peers (otomatik peer grubu)
@@ -51,11 +58,24 @@ def _print_report(ticker: str, pillar_results: dict, total: dict, mom: dict) -> 
     print(f"    {mom['message']}")
 
 
-def compute_alpha_score(ticker: str, market_data: dict, peer_market_data: list[dict]) -> dict:
+def compute_alpha_score(
+    ticker: str, market_data: dict, sector_peer_market_data: list[dict], universe_peer_market_data: list[dict]
+) -> dict:
     """Tek bir ticker için tüm pillar'ları + toplamı + momentum'u hesaplar.
 
     market_data: bu ticker'ın kendi piyasa verisi (main()'de önceden çekilir,
     burada tekrar çekilmez — aynı veri hem kendi skoru hem peer grubu için kullanılır).
+
+    İki AYRI peer grubu kullanılıyor:
+      - sector_peer_market_data: Pillar 3 (Değerleme) için — PE/PB gibi
+        çarpanlar sadece AYNI SEKTÖRDEKİ şirketlerle anlamlı karşılaştırılır
+        (bankanın PE'si bankayla, rafinerinin PE'si rafineriyle).
+      - universe_peer_market_data: Pillar 4 (Büyüklük) için — akademik
+        literatürdeki "küçük şirket primi" (SMB) TÜM PİYASAYA göre
+        tanımlanır, sektöre göre değil. Sektöre göre kısıtlarsak, sektöründe
+        tek başına olan şirketler (örn. TUPRS — evrendeki tek "Energy"
+        şirketi) anlamsız bir "50" (nötr) skor alır çünkü karşılaştıracak
+        hiç kimse yok.
     """
     metrics, _sources = normalizer.get_financials(ticker, years=2)
     periods = sorted(metrics.keys(), reverse=True)
@@ -67,8 +87,8 @@ def compute_alpha_score(ticker: str, market_data: dict, peer_market_data: list[d
     pillar_results = {
         "profitability": pillars.calculate_profitability_pillar(cur),
         "safety": pillars.calculate_safety_pillar(cur, prev, market_data.get("market_cap")),
-        "valuation": pillars.calculate_valuation_pillar(market_data, peer_market_data),
-        "size": pillars.calculate_size_pillar(market_data, peer_market_data),
+        "valuation": pillars.calculate_valuation_pillar(market_data, sector_peer_market_data),
+        "size": pillars.calculate_size_pillar(market_data, universe_peer_market_data),
     }
 
     total = pillars.calculate_total_score({name: r["score"] for name, r in pillar_results.items()})
@@ -79,9 +99,16 @@ def compute_alpha_score(ticker: str, market_data: dict, peer_market_data: list[d
     return {"pillar_results": pillar_results, "total": total, "momentum": mom, "market_data": market_data}
 
 
-def run(ticker: str, market_data: dict, peer_market_data: list[dict], engine, skip_db: bool) -> None:
+def run(
+    ticker: str,
+    market_data: dict,
+    sector_peer_market_data: list[dict],
+    universe_peer_market_data: list[dict],
+    engine,
+    skip_db: bool,
+) -> None:
     print(f"{ticker}: veri toplanıyor...")
-    result = compute_alpha_score(ticker, market_data, peer_market_data)
+    result = compute_alpha_score(ticker, market_data, sector_peer_market_data, universe_peer_market_data)
     _print_report(ticker, result["pillar_results"], result["total"], result["momentum"])
 
     if skip_db:
@@ -119,7 +146,8 @@ def main() -> None:
         db.ensure_schema(engine)
 
     market_data_by_ticker: dict[str, dict] = {}
-    peer_source: dict[str, list[dict]] = {}
+    valuation_peer_source: dict[str, list[dict]] = {}  # Pillar 3 — sektör bazlı
+    size_peer_source: dict[str, list[dict]] = {}  # Pillar 4 — TÜM evren bazlı
 
     if args.manual_peers:
         if len(args.tickers) == 1:
@@ -134,12 +162,16 @@ def main() -> None:
                 market_data_by_ticker[ticker] = yfinance_provider.fetch_market_data(ticker)
             except Exception as exc:
                 print(f"{ticker}: piyasa verisi çekilemedi — {exc}", file=sys.stderr)
+        # --manual-peers modunda sektör/evren ayrımı yok — komut satırındaki
+        # ticker'lar her iki pillar için de aynı (tek) peer grubu.
         peers = list(market_data_by_ticker.values())
-        peer_source = {ticker: peers for ticker in market_data_by_ticker}
+        valuation_peer_source = {ticker: peers for ticker in market_data_by_ticker}
+        size_peer_source = valuation_peer_source
     else:
         universe = sector_peers.load_universe()
         print(f"BIST evreni taranıyor ({len(universe)} ticker, sektör bilgisi için)...")
         universe_market_data = sector_peers.fetch_universe_market_data(universe)
+        all_universe_peers = list(universe_market_data.values())
 
         for ticker in args.tickers:
             if ticker in universe_market_data:
@@ -150,16 +182,37 @@ def main() -> None:
                 except Exception as exc:
                     print(f"{ticker}: piyasa verisi çekilemedi — {exc}", file=sys.stderr)
                     continue
-            peer_group = sector_peers.get_sector_peers(ticker, {**universe_market_data, ticker: market_data_by_ticker[ticker]})
-            peer_source[ticker] = peer_group
-            if len(peer_group) < 2:
-                print(f"{ticker}: UYARI — evrende aynı sektörden yeterli peer bulunamadı (n={len(peer_group)}).")
+
+            # Değerleme (Pillar 3): sadece AYNI SEKTÖRDEKİ şirketlerle kıyasla
+            # — PE/PB gibi çarpanlar sektörler arası doğrudan kıyaslanamaz.
+            sector_peer_group = sector_peers.get_sector_peers(
+                ticker, {**universe_market_data, ticker: market_data_by_ticker[ticker]}
+            )
+            valuation_peer_source[ticker] = sector_peer_group
+            if len(sector_peer_group) < 2:
+                print(f"{ticker}: UYARI — evrende aynı sektörden yeterli peer bulunamadı (n={len(sector_peer_group)}).")
+
+            # Büyüklük (Pillar 4): TÜM evrenle kıyasla — "küçük şirket primi"
+            # sektöre göre değil piyasanın tamamına göre tanımlanan bir
+            # kavram. Sektöre kısıtlarsak, sektöründe yalnız olan şirketler
+            # (örn. TUPRS — evrendeki tek "Energy" şirketi) karşılaştıracak
+            # kimse bulamayıp anlamsız bir nötr "50" skoru alıyordu.
+            size_peer_source[ticker] = all_universe_peers
+            if len(all_universe_peers) < 5:
+                print(f"{ticker}: UYARI — tüm evrende bile çok az peer var (n={len(all_universe_peers)}).")
 
     for ticker in args.tickers:
         if ticker not in market_data_by_ticker:
             continue  # piyasa verisi çekilemedi, yukarıda zaten hata basıldı
         try:
-            run(ticker, market_data_by_ticker[ticker], peer_source.get(ticker, []), engine, args.skip_db)
+            run(
+                ticker,
+                market_data_by_ticker[ticker],
+                valuation_peer_source.get(ticker, []),
+                size_peer_source.get(ticker, []),
+                engine,
+                args.skip_db,
+            )
         except Exception as exc:
             print(f"{ticker}: HATA — {exc}", file=sys.stderr)
 

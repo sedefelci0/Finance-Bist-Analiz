@@ -1,8 +1,11 @@
 """BIST evreni içinde sektör bazlı otomatik peer grubu oluşturma.
 
-Ticker evreni data/bist_universe.txt'ten okunur (bkz. dosyadaki UYARI —
-resmi endeks kaynağından değil, elle derlenip KAP'ın ticker veritabanına
-karşı tek tek doğrulanmış ~125 tanınmış/likit BIST şirketinden oluşuyor).
+Ticker evreni İKİ kademeli bir zincirle belirlenir (bkz. load_universe):
+  1. BİRİNCİL: providers/bist_universe_provider.py — Borsa İstanbul'un
+     resmi Yıldız Pazar (XYLDZ) CSV'si, 24 saatlik yerel cache ile.
+  2. FALLBACK: data/bist_universe.txt — elle derlenmiş, KAP'ın ticker
+     veritabanına karşı tek tek doğrulanmış statik liste (CSV'ye hiç
+     erişilemezse, örn. ağ hatası, kullanılır).
 Sektör bilgisi yfinance_provider.fetch_market_data() içindeki 'sector'
 alanından gelir (İngilizce GICS benzeri kategori, örn. "Energy",
 "Industrials" — BIST'e özgü resmi bir sektör taksonomisi değil ama
@@ -12,15 +15,32 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from providers import yfinance_provider
+from providers import bist_universe_provider, yfinance_provider
 
-_UNIVERSE_PATH = Path(__file__).resolve().parent.parent / "data" / "bist_universe.txt"
+_STATIC_UNIVERSE_PATH = Path(__file__).resolve().parent.parent / "data" / "bist_universe.txt"
 
 
-def load_universe(path: Path = _UNIVERSE_PATH) -> list[str]:
-    """data/bist_universe.txt'ten yorum satırları ve boş satırlar hariç ticker listesini okur."""
+def _load_static_universe(path: Path) -> list[str]:
     lines = path.read_text(encoding="utf-8").splitlines()
     return [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
+
+
+def load_universe(path: Path | None = None) -> list[str]:
+    """BIST evrenini döndürür.
+
+    `path` verilirse (örn. testlerde) doğrudan o statik dosyadan okunur —
+    dinamik CSV zinciri devre dışı kalır. `path` verilmezse önce Borsa
+    İstanbul'un güncel Yıldız Pazar CSV'sini (cache'li) dener, o başarısız
+    olursa data/bist_universe.txt'e düşer.
+    """
+    if path is not None:
+        return _load_static_universe(path)
+
+    try:
+        return bist_universe_provider.get_star_market_universe()
+    except Exception as exc:
+        print(f"UYARI: Borsa İstanbul evren CSV'sine erişilemedi ({exc}), statik listeye düşülüyor.")
+        return _load_static_universe(_STATIC_UNIVERSE_PATH)
 
 
 def fetch_universe_market_data(tickers: list[str]) -> dict[str, dict]:
