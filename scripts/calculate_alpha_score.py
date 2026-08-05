@@ -24,6 +24,10 @@ Veri akışı: normalizer (finansal kalemler) + yfinance_provider (piyasa
 verisi + fiyat getirisi) + providers/sector_peers (otomatik peer grubu)
 -> scoring/pillars.py (4 pillar + toplam) -> scoring/momentum.py (filtre)
 -> db.save_pillar_scores
+
+OTOMASYON: --all bayrağı tek tek ticker vermek yerine TÜM evreni tarar
+(örn. `python scripts/calculate_alpha_score.py --all`). .github/workflows/scan.yml
+bunu haftada iki kez (Pazartesi sabahı + Cuma kapanışta) otomatik çalıştırıyor.
 """
 from __future__ import annotations
 
@@ -179,7 +183,13 @@ def run(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="BIST hisseleri için Alpha Score v2 (4 pillar + momentum) hesaplar")
-    parser.add_argument("tickers", nargs="+", help="Skorlanacak ticker'lar, örn: TUPRS.IS THYAO.IS")
+    parser.add_argument("tickers", nargs="*", help="Skorlanacak ticker'lar, örn: TUPRS.IS THYAO.IS (--all ile birlikte kullanılmaz)")
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Ticker listesi vermek yerine data/bist_universe.txt (veya güncel Yıldız Pazar CSV'si) "
+        "üzerindeki TÜM evreni tara — haftalık otomatik taramada (bkz. .github/workflows/scan.yml) kullanılır.",
+    )
     parser.add_argument("--skip-db", action="store_true", help="Sadece ekrana bas, veritabanına yazma")
     parser.add_argument(
         "--manual-peers",
@@ -187,6 +197,14 @@ def main() -> None:
         help="Otomatik BIST sektör taraması yerine, peer grubu olarak sadece komut satırındaki diğer ticker'ları kullan",
     )
     args = parser.parse_args()
+
+    if args.all:
+        if args.tickers:
+            parser.error("--all ile birlikte tek tek ticker verilemez")
+        args.tickers = sector_peers.load_universe()
+        print(f"--all: evrendeki {len(args.tickers)} ticker taranacak.")
+    elif not args.tickers:
+        parser.error("en az bir ticker verin ya da --all kullanın")
 
     engine = None
     if not args.skip_db:

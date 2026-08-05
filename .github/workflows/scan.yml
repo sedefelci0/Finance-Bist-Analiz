@@ -1,0 +1,40 @@
+name: Haftalık BIST Taraması
+
+# Zamanlama (cron UTC'dir, Türkiye UTC+3 — yaz saati uygulaması yok, sabit +3):
+#   Pazartesi 09:00 TRT = 06:00 UTC -> hafta başı, piyasa açılışından önce
+#   Cuma      18:15 TRT = 15:15 UTC -> BIST kapanışından (18:00 TRT) sonra
+# workflow_dispatch: GitHub'ın "Actions" sekmesinden elle de tetiklenebilir
+# (zamanlamayı beklemeden test etmek için kullanışlı).
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+    - cron: "15 15 * * 5"
+  workflow_dispatch: {}
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    # 270 ticker + KAP fallback (Playwright) gereken tickerlar epey sürebiliyor
+    # (yerelde ~30-60+ dakika gözlemlendi) — geniş bir üst sınır.
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bağımlılıkları kur
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Tüm evreni tara ve veritabanına yaz
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_SSLMODE: ${{ secrets.DB_SSLMODE }}
+        run: python scripts/calculate_alpha_score.py --all
