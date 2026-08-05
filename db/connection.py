@@ -147,10 +147,18 @@ def save_pillar_scores(
     pillars: list[dict],
     total_score: float | None,
     momentum_flag: bool | None,
+    period_date: date | None = None,
 ) -> None:
     """Alpha Score v2 sonucunu pillar_scores tablosuna yazar.
 
     pillars: [{"name": str, "score": float | None, "weight": float, "notes": str}, ...]
+    period_date: Kârlılık/Sağlamlık'ın dayandığı mali dönem sonu (örn.
+    2024-12-31) — calculation_date (script'in ÇALIŞTIĞI tarih) ile
+    KARIŞTIRILMASIN. Değerleme/Büyüklük anlık piyasa verisine dayandığı için
+    kavramsal olarak bu alana ait değil, ama şema tek satır tipi tuttuğundan
+    (bkz. schema.sql) her satırda aynı period_date tekrarlanır — hangi
+    pillar'ın gerçekten döneme, hangisinin anlık veriye dayandığı notes
+    metninde açık (bkz. scoring/pillars.py::_INSTANT_DATA_NOTE).
     """
     with engine.begin() as conn:
         conn.execute(
@@ -158,10 +166,10 @@ def save_pillar_scores(
                 """
                 INSERT INTO pillar_scores
                     (ticker, calculation_date, pillar_name, pillar_score, pillar_weight,
-                     total_score, momentum_flag, notes)
+                     total_score, momentum_flag, notes, period_date)
                 VALUES
                     (:ticker, :calculation_date, :pillar_name, :pillar_score, :pillar_weight,
-                     :total_score, :momentum_flag, :notes)
+                     :total_score, :momentum_flag, :notes, :period_date)
                 """
             ),
             [
@@ -174,6 +182,7 @@ def save_pillar_scores(
                     "total_score": total_score,
                     "momentum_flag": momentum_flag,
                     "notes": p["notes"],
+                    "period_date": period_date,
                 }
                 for p in pillars
             ],

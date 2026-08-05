@@ -124,7 +124,7 @@ def load_latest_pillar_scores() -> pd.DataFrame:
     query = text(
         """
         SELECT ps.ticker, ps.calculation_date, ps.pillar_name, ps.pillar_score,
-               ps.pillar_weight, ps.total_score, ps.momentum_flag, ps.notes
+               ps.pillar_weight, ps.total_score, ps.momentum_flag, ps.notes, ps.period_date
         FROM pillar_scores ps
         INNER JOIN (
             SELECT ticker, MAX(calculation_date) AS max_date
@@ -141,10 +141,14 @@ def build_overview_table(df: pd.DataFrame) -> pd.DataFrame:
     """Uzun formattaki (bir satır = bir pillar) veriyi geniş formata (bir satır = bir ticker) çevirir."""
     pivot = df.pivot_table(index="ticker", columns="pillar_name", values="pillar_score", aggfunc="first")
     pivot = pivot.reindex(columns=_PILLAR_ORDER)
+    # period_date sadece Kârlılık/Sağlamlık satırlarında dolu (Değerleme/Büyüklük
+    # anlık piyasa verisine dayandığı için NULL) — dropna().first() ile
+    # ticker başına dolu olan tek bir "finansal dönem" değeri çıkarıyoruz.
     summary = df.groupby("ticker").agg(
         total_score=("total_score", "first"),
         momentum_flag=("momentum_flag", "first"),
         calculation_date=("calculation_date", "first"),
+        financial_period_date=("period_date", lambda s: s.dropna().iloc[0] if s.notna().any() else None),
     )
     result = summary.join(pivot).reset_index()
     result = result.sort_values("total_score", ascending=False, na_position="last")
@@ -193,6 +197,7 @@ def main() -> None:
             "total_score": "Toplam Skor",
             "momentum_flag": "Momentum Zayıf",
             "calculation_date": "Hesaplama Tarihi",
+            "financial_period_date": "Finansal Dönem",
             "profitability": "Kârlılık",
             "safety": "Sağlamlık",
             "valuation": "Değerleme",
@@ -225,10 +230,16 @@ def main() -> None:
         ticker_rows = df[df["ticker"] == selected].set_index("pillar_name")
         row_summary = overview[overview["ticker"] == selected].iloc[0]
 
-        m1, m2, m3 = st.columns(3)
+        m1, m2, m3, m4 = st.columns(4)
         m1.metric("Toplam Skor", f"{row_summary['total_score']:.0f}/100" if pd.notna(row_summary["total_score"]) else "veri yok")
         m2.metric("Hesaplama Tarihi", str(row_summary["calculation_date"]))
         m3.metric("Momentum", "⚠️ Zayıf" if row_summary["momentum_flag"] else "Normal")
+        m4.metric(
+            "Finansal Dönem",
+            str(row_summary["financial_period_date"]) if pd.notna(row_summary["financial_period_date"]) else "veri yok",
+            help="Kârlılık ve Finansal Sağlamlık pillar'larının dayandığı mali dönem sonu. "
+            "Değerleme ve Büyüklük anlık piyasa verisine dayanır, bu tarihe bağlı değildir.",
+        )
 
         chart_data = pd.DataFrame(
             {

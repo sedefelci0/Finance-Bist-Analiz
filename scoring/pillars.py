@@ -18,6 +18,8 @@ için gözden geçirilmeleri önerilir.
 """
 from __future__ import annotations
 
+from datetime import date
+
 from scoring import altman_z, piotroski
 
 Metrics = dict[str, float | None]
@@ -34,6 +36,13 @@ _LEVERAGE_DISCIPLINE_WEIGHT = 0.25  # uzun vadeli borç/aktif değişimi (CMA)
 _CURRENT_RATIO_WEIGHT = 0.25
 _LEVERAGE_CHANGE_SWING = 0.15  # ±15 puanlık oran değişimi tam skor salınımı
 _CURRENT_RATIO_LOW, _CURRENT_RATIO_MID, _CURRENT_RATIO_HIGH = 0.5, 1.0, 2.0
+
+# Değerleme ve Büyüklük, Kârlılık/Sağlamlık'ın aksine bir mali DÖNEME değil
+# ANLIK piyasa verisine (fetch_market_data'nın "şu an" enstantanesi) dayanır —
+# bu yüzden onların notes'unda "Dönem: ..." değil bu ifade kullanılıyor.
+# Anlık verinin ÇEKİLDİĞİ tarih zaten pillar_scores.calculation_date ile aynı
+# olduğu için ayrı bir alan/parametre gerekmiyor.
+_INSTANT_DATA_NOTE = "Anlık piyasa verisi (çekildiği tarih = hesaplama tarihi) — "
 
 # --- Pillar ağırlıkları (toplam skor) ---
 PILLAR_WEIGHTS = {
@@ -54,6 +63,11 @@ def _linear_score(value: float | None, low: float, high: float) -> float | None:
     return max(0.0, min(100.0, score))
 
 
+def _period_prefix(period_date: date | None) -> str:
+    """Dönemsel (finansal tablo bazlı) pillar notes'larının başına eklenen 'Dönem: ...' etiketi."""
+    return f"Dönem: {period_date.isoformat()} (yıllık) — " if period_date is not None else "Dönem: bilinmiyor — "
+
+
 def percentile_rank(value: float | None, peer_values: list[float | None]) -> float | None:
     """value'nun peer_values içindeki percentile'ı (0-100, düşük=peer'lerin çoğundan küçük).
 
@@ -71,8 +85,14 @@ def percentile_rank(value: float | None, peer_values: list[float | None]) -> flo
     return (rank / len(valid_peers)) * 100
 
 
-def calculate_profitability_pillar(metrics: Metrics) -> dict:
-    """Pillar 1 (%35): ROE, ROIC, brüt kar marjı, faaliyet kar marjı ortalaması."""
+def calculate_profitability_pillar(metrics: Metrics, period_date: date | None = None) -> dict:
+    """Pillar 1 (%35): ROE, ROIC, brüt kar marjı, faaliyet kar marjı ortalaması.
+
+    period_date: bu metrics'in ait olduğu mali dönem sonu (örn. 2024-12-31,
+    yıllık) — sadece notes'ta şeffaflık için gösteriliyor, hesaplamayı
+    etkilemiyor. Çağıran taraf (compute_alpha_score) zaten normalizer'dan
+    gelen en güncel dönemi (periods[0]) biliyor, burada sadece iletiliyor.
+    """
     net_income = metrics.get("net_income")
     total_equity = metrics.get("total_equity")
     ebit = metrics.get("ebit")
@@ -99,11 +119,15 @@ def calculate_profitability_pillar(metrics: Metrics) -> dict:
     available = {k: v for k, v in components.items() if v is not None}
 
     if not available:
-        return {"score": None, "notes": "veri yok: ROE, ROIC, brüt/faaliyet marjı hiçbiri hesaplanamadı"}
+        return {
+            "score": None,
+            "notes": _period_prefix(period_date) + "veri yok: ROE, ROIC, brüt/faaliyet marjı hiçbiri hesaplanamadı",
+        }
 
     score = sum(available.values()) / len(available)
     missing = [k for k, v in components.items() if v is None]
-    notes = f"ROE={roe:.2%} " if roe is not None else "ROE=yok "
+    notes = _period_prefix(period_date)
+    notes += f"ROE={roe:.2%} " if roe is not None else "ROE=yok "
     notes += f"ROIC={roic:.2%} " if roic is not None else "ROIC=yok "
     notes += f"brüt marj={gross_margin:.2%} " if gross_margin is not None else "brüt marj=yok "
     notes += f"faaliyet marjı={operating_margin:.2%}" if operating_margin is not None else "faaliyet marjı=yok"
@@ -113,25 +137,26 @@ def calculate_profitability_pillar(metrics: Metrics) -> dict:
     return {"score": score, "notes": notes}
 
 
-def calculate_safety_pillar(metrics: Metrics, prev_metrics: Metrics | None, market_cap: float | None) -> dict:
+def calculate_safety_pillar(
+    metrics: Metrics, prev_metrics: Metrics | None, market_cap: float | None, period_date: date | None = None
+) -> dict:
     """Pillar 2 (%30): (F-Score + Z-Score bileşik) %50, uzun vadeli borç disiplini %25, cari oran %25.
 
     F-Score ve Z-Score AYRI ağırlıklandırılmıyor — ikisinin normalize edilmiş
     skorlarının ortalaması "safety_core" olarak tek bir bileşen sayılıyor
     (kullanıcı notu: ikisi de kötüyse düşük, ikisi de iyiyse yüksek,
     çelişirlerse ortalanır — basit ortalama bunu doğal olarak sağlıyor).
+
+    period_date: metrics'in ait olduğu mali dönem sonu — sadece notes'ta
+    şeffaflık için (bkz. calculate_profitability_pillar'daki aynı parametre).
     """
-    period_dates_metrics = {}
+    # piotroski.calculate_f_score iki dönemli bir sözlük bekliyor; anahtarlardaki
+    # tarihler burada önemli değil (sadece sıralama için), placeholder — gerçek
+    # period_date parametresiyle KARIŞTIRILMASIN, o sadece notes'ta gösterilir.
     if prev_metrics is not None:
-        # piotroski.calculate_f_score iki dönemli bir sözlük bekliyor; period_date'ler
-        # burada önemli değil (sadece sıralama için), placeholder anahtarlar kullanıyoruz.
-        from datetime import date as _date
-
-        period_dates_metrics = {_date(2, 1, 1): metrics, _date(1, 1, 1): prev_metrics}
+        period_dates_metrics = {date(2, 1, 1): metrics, date(1, 1, 1): prev_metrics}
     else:
-        from datetime import date as _date
-
-        period_dates_metrics = {_date(1, 1, 1): metrics}
+        period_dates_metrics = {date(1, 1, 1): metrics}
 
     f_result = piotroski.calculate_f_score(period_dates_metrics)
     f_score_normalized = (
@@ -193,12 +218,17 @@ def calculate_safety_pillar(metrics: Metrics, prev_metrics: Metrics | None, mark
         weighted_parts.append((current_ratio_score, _CURRENT_RATIO_WEIGHT))
 
     if not weighted_parts:
-        return {"score": None, "notes": "veri yok: F-Score, Z-Score, kaldıraç değişimi, cari oran hiçbiri hesaplanamadı"}
+        return {
+            "score": None,
+            "notes": _period_prefix(period_date)
+            + "veri yok: F-Score, Z-Score, kaldıraç değişimi, cari oran hiçbiri hesaplanamadı",
+        }
 
     total_weight = sum(w for _, w in weighted_parts)
     score = sum(s * w for s, w in weighted_parts) / total_weight
 
     notes = (
+        f"{_period_prefix(period_date)}"
         f"F-Score={f_result['total_score']}/{f_result['calculated_count']} "
         f"({'normalize: %.0f' % f_score_normalized if f_score_normalized is not None else 'yok'}); "
         f"{z_result['notes']}; "
@@ -236,12 +266,14 @@ def calculate_valuation_pillar(market_data: dict, peer_market_data: list[dict]) 
     if not available:
         return {
             "score": None,
-            "notes": f"veri yok: PE/PEG/EV-EBITDA/P-B hiçbiri hesaplanamadı (peer grubu boş olabilir){currency_note}",
+            "notes": _INSTANT_DATA_NOTE
+            + f"veri yok: PE/PEG/EV-EBITDA/P-B hiçbiri hesaplanamadı (peer grubu boş olabilir){currency_note}",
         }
 
     score = sum(available.values()) / len(available)
     missing = [k for k, v in scores.items() if v is None]
-    notes = ", ".join(
+    notes = _INSTANT_DATA_NOTE
+    notes += ", ".join(
         f"{k}={'%.0f' % v if v is not None else 'yok'}" for k, v in scores.items()
     )
     notes += f" (n_peer={len(peer_market_data)})"
@@ -268,10 +300,15 @@ def calculate_size_pillar(market_data: dict, peer_market_data: list[dict]) -> di
     components = {"market_cap": market_cap_score, "beta": beta_score}
     available = {k: v for k, v in components.items() if v is not None}
     if not available:
-        return {"score": None, "notes": f"veri yok: piyasa değeri/beta percentile hesaplanamadı (n_peer={len(peer_market_data)})"}
+        return {
+            "score": None,
+            "notes": _INSTANT_DATA_NOTE
+            + f"veri yok: piyasa değeri/beta percentile hesaplanamadı (n_peer={len(peer_market_data)})",
+        }
 
     score = sum(available.values()) / len(available)
     notes = (
+        f"{_INSTANT_DATA_NOTE}"
         f"piyasa değeri (küçüklük skoru)={'%.0f' % market_cap_score if market_cap_score is not None else 'yok'}, "
         f"beta={market_data.get('beta')} (skor={'%.0f' % beta_score if beta_score is not None else 'yok'}), "
         f"n_peer={len(peer_market_data)}"

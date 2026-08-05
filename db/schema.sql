@@ -46,8 +46,16 @@ CREATE TABLE IF NOT EXISTS pillar_scores (
     pillar_weight NUMERIC NOT NULL,     -- o pillar'ın ağırlığı (örn. 0.35)
     total_score NUMERIC,                -- o hesaplama koşusunun toplam skoru (her satırda tekrarlanır)
     momentum_flag BOOLEAN,              -- True = "momentum zayıf" uyarısı (skoru etkilemez)
-    notes TEXT
+    notes TEXT,
+    period_date DATE                    -- Kârlılık/Sağlamlık'ın dayandığı mali dönem sonu (örn. 2024-12-31).
+                                         -- Değerleme/Büyüklük anlık piyasa verisine dayandığı için bu satırlarda
+                                         -- NULL kalabilir — bkz. scoring/pillars.py::_INSTANT_DATA_NOTE.
 );
+
+-- Tablo daha önce (bu kolon olmadan) oluşturulmuş olabilir — CREATE TABLE IF
+-- NOT EXISTS var olan tabloyu değiştirmez, mevcut deployment'ları göçürmek
+-- (migration) için ayrıca bu ALTER gerekiyor. Kolon zaten varsa no-op'tur.
+ALTER TABLE pillar_scores ADD COLUMN IF NOT EXISTS period_date DATE;
 
 CREATE INDEX IF NOT EXISTS idx_pillar_scores_lookup
     ON pillar_scores (ticker, calculation_date);

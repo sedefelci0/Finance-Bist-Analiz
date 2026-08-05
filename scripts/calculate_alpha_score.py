@@ -46,8 +46,8 @@ def _fmt(score: float | None) -> str:
     return f"{score:.1f}" if score is not None else "VERİ YOK"
 
 
-def _print_report(ticker: str, pillar_results: dict, total: dict, mom: dict) -> None:
-    print(f"\n=== {ticker} — Alpha Score v2 ===")
+def _print_report(ticker: str, pillar_results: dict, total: dict, mom: dict, period_date: date) -> None:
+    print(f"\n=== {ticker} — Alpha Score v2 (finansal dönem: {period_date.isoformat()}) ===")
     for name, weight in pillars.PILLAR_WEIGHTS.items():
         result = pillar_results[name]
         print(f"  [{name} — ağırlık %{weight * 100:.0f}] skor={_fmt(result['score'])}")
@@ -81,12 +81,14 @@ def compute_alpha_score(
     periods = sorted(metrics.keys(), reverse=True)
     if not periods:
         raise ValueError("finansal veri hiç bulunamadı")
-    cur = metrics[periods[0]]
-    prev = metrics[periods[1]] if len(periods) > 1 else None
+    period_date = periods[0]  # Kârlılık/Sağlamlık pillar'larının dayandığı en güncel mali dönem
+    prev_period_date = periods[1] if len(periods) > 1 else None
+    cur = metrics[period_date]
+    prev = metrics[prev_period_date] if prev_period_date is not None else None
 
     pillar_results = {
-        "profitability": pillars.calculate_profitability_pillar(cur),
-        "safety": pillars.calculate_safety_pillar(cur, prev, market_data.get("market_cap")),
+        "profitability": pillars.calculate_profitability_pillar(cur, period_date),
+        "safety": pillars.calculate_safety_pillar(cur, prev, market_data.get("market_cap"), period_date),
         "valuation": pillars.calculate_valuation_pillar(market_data, sector_peer_market_data),
         "size": pillars.calculate_size_pillar(market_data, universe_peer_market_data),
     }
@@ -96,7 +98,14 @@ def compute_alpha_score(
     returns = yfinance_provider.fetch_price_returns(ticker)
     mom = momentum.check_momentum_flag(total["total_score"], returns)
 
-    return {"pillar_results": pillar_results, "total": total, "momentum": mom, "market_data": market_data}
+    return {
+        "pillar_results": pillar_results,
+        "total": total,
+        "momentum": mom,
+        "market_data": market_data,
+        "period_date": period_date,
+        "prev_period_date": prev_period_date,
+    }
 
 
 def run(
@@ -109,7 +118,7 @@ def run(
 ) -> None:
     print(f"{ticker}: veri toplanıyor...")
     result = compute_alpha_score(ticker, market_data, sector_peer_market_data, universe_peer_market_data)
-    _print_report(ticker, result["pillar_results"], result["total"], result["momentum"])
+    _print_report(ticker, result["pillar_results"], result["total"], result["momentum"], result["period_date"])
 
     if skip_db:
         return
@@ -125,6 +134,7 @@ def run(
         pillars=pillar_rows,
         total_score=result["total"]["total_score"],
         momentum_flag=result["momentum"]["flag"],
+        period_date=result["period_date"],
     )
     print(f"{ticker}: pillar_scores tablosuna yazıldı.")
 
