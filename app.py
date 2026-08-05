@@ -65,6 +65,52 @@ _PILLAR_COLORS = {
     "size": "#eda100",           # yellow
 }
 
+# "Pillar detay notları" altındaki "ℹ️ Bu skorlar nasıl hesaplanıyor?" için —
+# scoring/pillars.py + scoring/altman_z.py + scoring/piotroski.py'deki
+# formüllerin kullanıcıya yönelik, sade Türkçe özeti. Hesaplama mantığı
+# değişirse (eşikler, ağırlıklar) burası da güncellenmeli.
+_METHODOLOGY_EXPLAINER = """
+Her pillar, birkaç alt-oranın **0-100'e çevrilip ortalanmasıyla** hesaplanıyor.
+Kârlılık ve Finansal Sağlamlık **mutlak eşiklere** göre; Değerleme ve Büyüklük
+ise **göreceli** (peer grubuna göre yüzdelik dilim / percentile) puanlanıyor.
+
+**Kârlılık** — 4 oranın ortalaması:
+
+| Oran | Formül | 0 puan eşiği | 100 puan eşiği |
+|---|---|---|---|
+| ROE | Net Kâr ÷ Özkaynak | %0 | %25 |
+| ROIC | EBIT×(1-vergi oranı) ÷ Yatırılan Sermaye | %0 | %20 |
+| Brüt marj | Brüt Kâr ÷ Hasılat | %0 | %40 |
+| Faaliyet marjı | EBIT ÷ Hasılat | %0 | %25 |
+
+*(Kârlılık (Son 12 Ay / TTM) aynı 4 formülü kullanır, sadece girdiler son 4
+çeyreğin toplamına/en son çeyreğin bilançosuna dayanır — yıllık kapanmış tam
+mali yıl yerine kayan son 12 ay.)*
+
+**Finansal Sağlamlık** — 4 sinyalin ağırlıklı ortalaması:
+- **F-Score + Z-Score bileşik (%50)**: F-Score, Piotroski'nin 9 kriterlik testi
+  (kâr pozitif mi, nakit akışı kârdan büyük mü, borç azalıyor mu, vb. — kaç
+  kriter sağlandı). Z-Score, Altman'ın iflas riski modeli (Z>2.99 = "güvenli
+  bölge", <1.81 = "sıkıntılı bölge"). İkisi ayrı ayrı ağırlıklandırılmıyor,
+  normalize edilip ortalanıyor.
+- **Kaldıraç disiplini (%25)**: uzun vadeli borç/aktif oranı geçen yıla göre
+  azalmış mı.
+- **Cari oran (%25)**: dönen varlıklar ÷ kısa vadeli borç (likidite).
+
+**Değerleme** — PE, PEG, EV/EBITDA, P/B çarpanlarının **aynı sektördeki**
+şirketlere göre yüzdelik dilimi. Düşük çarpan (ucuz) = yüksek puan. Veri
+eksikse ("yok") o çarpan ortalamaya katılmaz, notlarda "eksik: ..." diye
+belirtilir.
+
+**Büyüklük** — piyasa değeri (KÜÇÜK=yüksek puan, akademik "küçük şirket
+primi" mantığıyla) ve beta'nın (düşük volatilite=yüksek puan) **tüm BIST
+evrenine** göre yüzdelik dilimi.
+
+Eşikler ve ağırlıklar kodda sabit tanımlı, tartışmaya açık — özellikle
+Türkiye'deki enflasyon muhasebesi nominal rakamları şişirebildiği için
+ileride kalibre edilmeleri gerekebilir.
+"""
+
 
 @st.cache_data(ttl=1800)  # 30 dakika — KAP taraması (Playwright) yavaş, gereksiz tekrar taramayı önle
 def load_news(ticker: str) -> dict[str, list[dict]]:
@@ -298,6 +344,8 @@ def main() -> None:
                 st.info(signal_message)
 
         st.markdown("**Pillar detay notları:**")
+        with st.expander("ℹ️ Bu skorlar nasıl hesaplanıyor? (formüller ve mantık)"):
+            st.markdown(_METHODOLOGY_EXPLAINER)
         for p in _PILLAR_ORDER:
             if p in ticker_rows.index:
                 score = ticker_rows.loc[p, "pillar_score"]
