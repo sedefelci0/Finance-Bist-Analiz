@@ -63,9 +63,20 @@ def _linear_score(value: float | None, low: float, high: float) -> float | None:
     return max(0.0, min(100.0, score))
 
 
-def _period_prefix(period_date: date | None) -> str:
-    """Dönemsel (finansal tablo bazlı) pillar notes'larının başına eklenen 'Dönem: ...' etiketi."""
-    return f"Dönem: {period_date.isoformat()} (yıllık) — " if period_date is not None else "Dönem: bilinmiyor — "
+def _period_prefix(period_date: date | None, ttm_quarter_dates: list[date] | None = None) -> str:
+    """Dönemsel (finansal tablo bazlı) pillar notes'larının başına eklenen 'Dönem: ...' etiketi.
+
+    ttm_quarter_dates verilirse (TTM/kısa dönem hesaplaması — bkz.
+    calculate_profitability_pillar), period_date yerine "TTM (son 4 çeyrek,
+    ...)" etiketi üretilir; normalizer.get_ttm_financials'ın 3. dönüş değeri
+    (en yeniden en eskiye 4 çeyrek tarihi) doğrudan buraya verilebilir.
+    """
+    if ttm_quarter_dates:
+        oldest, newest = min(ttm_quarter_dates), max(ttm_quarter_dates)
+        return f"Dönem: TTM (son 4 çeyrek, {oldest.isoformat()} - {newest.isoformat()}) — "
+    if period_date is not None:
+        return f"Dönem: {period_date.isoformat()} (yıllık) — "
+    return "Dönem: bilinmiyor — "
 
 
 def percentile_rank(value: float | None, peer_values: list[float | None]) -> float | None:
@@ -85,13 +96,21 @@ def percentile_rank(value: float | None, peer_values: list[float | None]) -> flo
     return (rank / len(valid_peers)) * 100
 
 
-def calculate_profitability_pillar(metrics: Metrics, period_date: date | None = None) -> dict:
+def calculate_profitability_pillar(
+    metrics: Metrics, period_date: date | None = None, ttm_quarter_dates: list[date] | None = None
+) -> dict:
     """Pillar 1 (%35): ROE, ROIC, brüt kar marjı, faaliyet kar marjı ortalaması.
 
-    period_date: bu metrics'in ait olduğu mali dönem sonu (örn. 2024-12-31,
-    yıllık) — sadece notes'ta şeffaflık için gösteriliyor, hesaplamayı
-    etkilemiyor. Çağıran taraf (compute_alpha_score) zaten normalizer'dan
-    gelen en güncel dönemi (periods[0]) biliyor, burada sadece iletiliyor.
+    Hesaplama mantığı DEĞİŞMEDİ — bu fonksiyon hangi dönemin metrics'i
+    verilirse onu hesaplar, çağıran tarafın (compute_alpha_score) hem yıllık
+    hem TTM (son 4 çeyrek toplamı — bkz. normalizer.get_ttm_financials) için
+    AYNI fonksiyonu iki kez çağırmasına izin verir.
+
+    period_date: yıllık çağrıda bu metrics'in ait olduğu mali dönem sonu
+    (örn. 2024-12-31) — sadece notes'ta şeffaflık için.
+    ttm_quarter_dates: TTM çağrısında normalizer.get_ttm_financials'ın 3.
+    dönüş değeri — verilirse notes "Dönem: TTM (...)" şeklinde olur,
+    period_date'i ez er (birlikte kullanılmaz).
     """
     net_income = metrics.get("net_income")
     total_equity = metrics.get("total_equity")
@@ -121,12 +140,13 @@ def calculate_profitability_pillar(metrics: Metrics, period_date: date | None = 
     if not available:
         return {
             "score": None,
-            "notes": _period_prefix(period_date) + "veri yok: ROE, ROIC, brüt/faaliyet marjı hiçbiri hesaplanamadı",
+            "notes": _period_prefix(period_date, ttm_quarter_dates)
+            + "veri yok: ROE, ROIC, brüt/faaliyet marjı hiçbiri hesaplanamadı",
         }
 
     score = sum(available.values()) / len(available)
     missing = [k for k, v in components.items() if v is None]
-    notes = _period_prefix(period_date)
+    notes = _period_prefix(period_date, ttm_quarter_dates)
     notes += f"ROE={roe:.2%} " if roe is not None else "ROE=yok "
     notes += f"ROIC={roic:.2%} " if roic is not None else "ROIC=yok "
     notes += f"brüt marj={gross_margin:.2%} " if gross_margin is not None else "brüt marj=yok "
@@ -135,6 +155,42 @@ def calculate_profitability_pillar(metrics: Metrics, period_date: date | None = 
         notes += f" ({len(missing)} bileşen veri eksikliğinden hesaba katılmadı: {', '.join(missing)})"
 
     return {"score": score, "notes": notes}
+
+
+# ±15 puanlık fark toparlanma/bozulma sinyali eşiği — kolayca ayarlanabilir.
+_PROFITABILITY_SIGNAL_THRESHOLD = 15.0
+
+
+def calculate_profitability_signal(annual_score: float | None, ttm_score: float | None) -> dict:
+    """Yıllık ile TTM Kârlılık skorları arasındaki farka göre toparlanma/bozulma sinyali üretir.
+
+    KARAR (kullanıcı): iki skorun ORTALAMASI ALINMAZ — kullanıcı bilinçli
+    olarak "yıllık düşük ama son 12 ayda toparlanıyor" gibi farkı görmek
+    istiyor, tek bir ortalama sayı bu bilgiyi kaybettirir. Bu fonksiyon
+    sadece bir "sinyal/bilgi" üretir, TOPLAM SKORU ETKİLEMEZ (calculate_total_score
+    hâlâ sadece yıllık skoru kullanır).
+
+    Dönüş: {"signal": "toparlanma" | "bozulma" | "stabil" | None, "diff": float | None, "message": str}
+    """
+    if annual_score is None or ttm_score is None:
+        return {
+            "signal": None,
+            "diff": None,
+            "message": "veri yok: yıllık veya TTM Kârlılık skoru eksik, sinyal hesaplanamadı",
+        }
+
+    diff = ttm_score - annual_score
+    if diff >= _PROFITABILITY_SIGNAL_THRESHOLD:
+        signal = "toparlanma"
+        message = f"🔼 TOPARLANMA SİNYALİ: son 12 aylık kârlılık, yıllık dönemin {diff:.0f} puan üzerinde"
+    elif diff <= -_PROFITABILITY_SIGNAL_THRESHOLD:
+        signal = "bozulma"
+        message = f"🔽 BOZULMA SİNYALİ: son 12 aylık kârlılık, yıllık dönemin {abs(diff):.0f} puan altında"
+    else:
+        signal = "stabil"
+        message = f"stabil (TTM ile yıllık arasındaki fark: {diff:+.0f} puan)"
+
+    return {"signal": signal, "diff": diff, "message": message}
 
 
 def calculate_safety_pillar(

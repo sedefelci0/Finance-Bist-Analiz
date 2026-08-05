@@ -31,6 +31,11 @@ CANONICAL_METRICS = [
     "tax_rate_for_calcs",
 ]
 
+# TTM (Trailing Twelve Months) hesabında AKIŞ kalemleri son 4 çeyrek TOPLANIR;
+# geri kalanı (bilanço/stok kalemleri + tax_rate_for_calcs) TOPLANMAZ, en son
+# çeyreğin anlık değeri kullanılır — bkz. get_ttm_financials.
+_TTM_FLOW_METRICS = {"net_income", "revenue", "gross_profit", "operating_cash_flow", "ebit"}
+
 
 def get_financials(
     ticker: str, years: int = 2
@@ -85,6 +90,76 @@ def get_financials(
             sources[period_date][metric] = "yok"
 
     return metrics, sources
+
+
+def get_ttm_financials(
+    ticker: str,
+) -> tuple[dict[str, float | None], dict[str, str], list[date]]:
+    """TTM (Trailing Twelve Months — kayan son 12 ay) sentetik dönem üretir.
+
+    AKIŞ kalemleri (_TTM_FLOW_METRICS: net_income, revenue, gross_profit,
+    operating_cash_flow, ebit) son 4 çeyreğin TOPLAMI; geri kalan (bilanço/
+    stok kalemleri + tax_rate_for_calcs) EN SON çeyreğin anlık değeri —
+    TTM hesaplamasının standart yöntemi.
+
+    KAP FALLBACK YOK: KAP'ın finansal bilgi sayfası yıl sonu (Aralık) dışındaki
+    ara dönemleri KÜMÜLATİF (Ocak-Mart, Ocak-Haziran, ...) veriyor, ayrık
+    (discrete) çeyreklik değil — bunlardan doğru TTM üretmek için art arda
+    çıkarma (örn. Q4 = tam yıl - 9 aylık kümülatif) gerekir; bu ekstra
+    karmaşıklık ve farklı dönem tanımlarının karışma riski bilinçli olarak
+    alınmadı. financialCurrency TRY olmayan (yfinance'in tamamen reddedildiği,
+    bkz. yfinance_provider) tickerlarda TTM bu yüzden hep "veri yok" kalır —
+    KAP'a düşülmez.
+
+    Dönüş: (metrics, sources, quarter_dates)
+      metrics[metric_name] -> değer ya da None (DÜZ dict — get_financials'ın
+        aksine TEK bir sentetik dönemi temsil ettiği için dict[date,...] değil)
+      sources[metric_name] -> "yfinance" | "yok"
+      quarter_dates: TTM'e dahil edilen 4 çeyreğin dönem sonu tarihleri
+        (en yeniden en eskiye) — notes'ta "TTM (2025/Q2 - 2026/Q1)" gibi
+        şeffaflık için (bkz. scoring/pillars.py::_period_prefix).
+    """
+    # fetch_quarterly_financials bazen tamamen boş (NaN) bir "trailing" kolon
+    # döndürebiliyor (bkz. o fonksiyonun docstring'i) — 4'ten fazla isteyip
+    # gerçekten dolu olan ilk 4'ü seçerek bu sorunu bertaraf ediyoruz.
+    quarterly = yfinance_provider.fetch_quarterly_financials(ticker, quarters=6)
+
+    populated_quarters = [
+        (period_date, period_metrics)
+        for period_date, period_metrics in sorted(quarterly.items(), reverse=True)
+        if any(period_metrics.get(m) is not None for m in _TTM_FLOW_METRICS)
+    ]
+
+    if len(populated_quarters) < 4:
+        # Yeterli çeyrek yok (örn. financialCurrency TRY değil, ya da yeni
+        # listelenmiş bir şirket) — TTM tamamen "veri yok".
+        return (
+            {metric: None for metric in CANONICAL_METRICS},
+            {metric: "yok" for metric in CANONICAL_METRICS},
+            [],
+        )
+
+    last_4 = populated_quarters[:4]
+    latest_period_metrics = last_4[0][1]
+    quarter_dates = [q[0] for q in last_4]
+
+    metrics: dict[str, float | None] = {}
+    sources: dict[str, str] = {}
+    for metric in CANONICAL_METRICS:
+        if metric in _TTM_FLOW_METRICS:
+            values = [q_metrics.get(metric) for _, q_metrics in last_4]
+            if all(v is not None for v in values):
+                metrics[metric] = sum(values)
+                sources[metric] = "yfinance"
+            else:
+                metrics[metric] = None
+                sources[metric] = "yok"
+        else:
+            value = latest_period_metrics.get(metric)
+            metrics[metric] = value
+            sources[metric] = "yfinance" if value is not None else "yok"
+
+    return metrics, sources, quarter_dates
 
 
 def to_flat_rows(

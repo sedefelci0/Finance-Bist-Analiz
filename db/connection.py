@@ -148,6 +148,7 @@ def save_pillar_scores(
     total_score: float | None,
     momentum_flag: bool | None,
     period_date: date | None = None,
+    profitability_signal: str | None = None,
 ) -> None:
     """Alpha Score v2 sonucunu pillar_scores tablosuna yazar.
 
@@ -159,17 +160,27 @@ def save_pillar_scores(
     (bkz. schema.sql) her satırda aynı period_date tekrarlanır — hangi
     pillar'ın gerçekten döneme, hangisinin anlık veriye dayandığı notes
     metninde açık (bkz. scoring/pillars.py::_INSTANT_DATA_NOTE).
+    profitability_signal: scoring/pillars.py::calculate_profitability_signal'ın
+    ürettiği "toparlanma/bozulma/stabil" mesajı — total_score gibi her
+    satırda tekrarlanır.
     """
+    # Bu run'ın TÜM satırları AYNI created_at değerini alıyor (veritabanının
+    # kendi now()'ını her satır için ayrı ayrı çağırmasına GÜVENMİYORUZ) —
+    # load_latest_pillar_scores (app.py) "MAX(created_at) per ticker" ile
+    # tam olarak bu run'ı izole edebilsin diye. Aynı ticker aynı gün içinde
+    # birden fazla kez çalıştırılırsa (calculation_date DATE hassasiyeti
+    # bunu ayırt edemez) bu olmadan eski/yeni run'ların satırları karışırdı.
+    run_timestamp = datetime.utcnow()
     with engine.begin() as conn:
         conn.execute(
             text(
                 """
                 INSERT INTO pillar_scores
                     (ticker, calculation_date, pillar_name, pillar_score, pillar_weight,
-                     total_score, momentum_flag, notes, period_date)
+                     total_score, momentum_flag, notes, period_date, profitability_signal, created_at)
                 VALUES
                     (:ticker, :calculation_date, :pillar_name, :pillar_score, :pillar_weight,
-                     :total_score, :momentum_flag, :notes, :period_date)
+                     :total_score, :momentum_flag, :notes, :period_date, :profitability_signal, :created_at)
                 """
             ),
             [
@@ -183,6 +194,8 @@ def save_pillar_scores(
                     "momentum_flag": momentum_flag,
                     "notes": p["notes"],
                     "period_date": period_date,
+                    "profitability_signal": profitability_signal,
+                    "created_at": run_timestamp,
                 }
                 for p in pillars
             ],

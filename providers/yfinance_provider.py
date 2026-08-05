@@ -94,6 +94,62 @@ def fetch_annual_financials(ticker: str, years: int = 2) -> dict[date, dict[str,
     return results
 
 
+def fetch_quarterly_financials(ticker: str, quarters: int = 4) -> dict[date, dict[str, float | None]]:
+    """Belirtilen ticker için son `quarters` çeyreğin ham finansal kalemlerini çeker.
+
+    fetch_annual_financials'ın çeyreklik hali — aynı _LABEL_CANDIDATES ve aynı
+    yapı (dict[period_date, dict[metric, value]]), sadece yfinance'in
+    `quarterly_` önekli tablolarından. TTM (Trailing Twelve Months) hesabı
+    BURADA YAPILMAZ — bu fonksiyon sadece ham çeyreklik veriyi döndürür,
+    "son 4 çeyreği topla / en sonuncusunu al" mantığı providers/normalizer.py
+    ::get_ttm_financials() içinde.
+
+    yfinance'in çeyreklik kolonları bazen tamamen boş (NaN) bir "trailing"
+    yer tutucu içerebiliyor (gerçek veri olmayan en eski kolon) — bu
+    fonksiyon böyle bir kolonu FİLTRELEMİYOR, olduğu gibi (tüm değerleri
+    None olarak) döndürüyor; boş çeyreği atlama sorumluluğu çağırana ait
+    (get_ttm_financials fazladan çeyrek isteyip dolu olanları seçiyor).
+
+    Aynı financialCurrency != TRY riski (bkz. fetch_annual_financials) burada
+    da geçerli, aynı şekilde ele alınıyor.
+    """
+    t = yf.Ticker(ticker)
+
+    financial_currency = t.info.get("financialCurrency")
+    if financial_currency and financial_currency != "TRY":
+        return {}
+
+    balance_sheet = t.quarterly_balance_sheet
+    income_stmt = t.quarterly_financials
+    cash_flow = t.quarterly_cashflow
+
+    period_ends: list[pd.Timestamp] = []
+    for df in (balance_sheet, income_stmt, cash_flow):
+        if df is not None and not df.empty:
+            period_ends.extend(df.columns.tolist())
+    period_ends = sorted(set(period_ends), reverse=True)[:quarters]
+
+    results: dict[date, dict[str, float | None]] = {}
+    for period_end in period_ends:
+        period_date = period_end.date() if hasattr(period_end, "date") else period_end
+        metrics: dict[str, float | None] = {}
+        for metric_name, candidates in _LABEL_CANDIDATES.items():
+            value = None
+            for df in (balance_sheet, income_stmt, cash_flow):
+                if df is None or df.empty or period_end not in df.columns:
+                    continue
+                row = _find_row(df, candidates)
+                if row is not None and period_end in row.index:
+                    raw = row[period_end]
+                    if pd.notna(raw):
+                        value = float(raw)
+                        break
+            metrics[metric_name] = value
+        results[period_date] = metrics
+
+    return results
+
+
 def fetch_market_data(ticker: str) -> dict:
     """Anlık (point-in-time) piyasa verisi: market cap, beta, çarpanlar, sektör.
 

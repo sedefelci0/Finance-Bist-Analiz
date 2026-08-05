@@ -47,15 +47,36 @@ CREATE TABLE IF NOT EXISTS pillar_scores (
     total_score NUMERIC,                -- o hesaplama koşusunun toplam skoru (her satırda tekrarlanır)
     momentum_flag BOOLEAN,              -- True = "momentum zayıf" uyarısı (skoru etkilemez)
     notes TEXT,
-    period_date DATE                    -- Kârlılık/Sağlamlık'ın dayandığı mali dönem sonu (örn. 2024-12-31).
+    period_date DATE,                   -- Kârlılık/Sağlamlık'ın dayandığı mali dönem sonu (örn. 2024-12-31).
                                          -- Değerleme/Büyüklük anlık piyasa verisine dayandığı için bu satırlarda
                                          -- NULL kalabilir — bkz. scoring/pillars.py::_INSTANT_DATA_NOTE.
+    profitability_signal TEXT,          -- Yıllık vs TTM (son 4 çeyrek) Kârlılık skoru farkına göre üretilen
+                                         -- "toparlanma/bozulma/stabil" mesajı — bkz.
+                                         -- scoring/pillars.py::calculate_profitability_signal. Her satırda
+                                         -- tekrarlanır (total_score/momentum_flag ile aynı desen).
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()  -- bkz. aşağıdaki NOT
 );
 
--- Tablo daha önce (bu kolon olmadan) oluşturulmuş olabilir — CREATE TABLE IF
--- NOT EXISTS var olan tabloyu değiştirmez, mevcut deployment'ları göçürmek
--- (migration) için ayrıca bu ALTER gerekiyor. Kolon zaten varsa no-op'tur.
+-- NEDEN created_at GEREKLİ: calculation_date GÜN hassasiyetinde (DATE) —
+-- aynı ticker aynı gün içinde birden fazla kez çalıştırılırsa (örn. test
+-- amaçlı, ya da script hatası sonrası tekrar), "en güncel calculation_date"
+-- filtresi O GÜNÜN TÜM koşularının satırlarını (5'er satırlık gruplar
+-- halinde tekrar tekrar) döndürür — app.py'de ticker_rows.loc["profitability", ...]
+-- gibi TEK satır bekleyen kod, birden fazla satır (Series) dönüp çöker.
+-- created_at bir TIMESTAMPTZ olduğu için aynı gün içindeki koşuları da
+-- ayırt edebiliyor; db.save_pillar_scores TEK bir run'ın tüm satırlarına
+-- AYNI created_at değerini (Python tarafında bir kez hesaplanmış) veriyor,
+-- böylece "MAX(created_at) per ticker" gerçekten TEK bir run'ı izole ediyor.
+
+-- Tablo daha önce (bu kolonlar olmadan) oluşturulmuş olabilir — CREATE TABLE
+-- IF NOT EXISTS var olan tabloyu değiştirmez, mevcut deployment'ları
+-- göçürmek (migration) için ayrıca bu ALTER'lar gerekiyor. Kolon zaten
+-- varsa no-op'tur.
 ALTER TABLE pillar_scores ADD COLUMN IF NOT EXISTS period_date DATE;
+ALTER TABLE pillar_scores ADD COLUMN IF NOT EXISTS profitability_signal TEXT;
+ALTER TABLE pillar_scores ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
 CREATE INDEX IF NOT EXISTS idx_pillar_scores_lookup
     ON pillar_scores (ticker, calculation_date);
+CREATE INDEX IF NOT EXISTS idx_pillar_scores_latest
+    ON pillar_scores (ticker, created_at DESC);

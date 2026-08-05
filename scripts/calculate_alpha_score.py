@@ -46,12 +46,20 @@ def _fmt(score: float | None) -> str:
     return f"{score:.1f}" if score is not None else "VERİ YOK"
 
 
-def _print_report(ticker: str, pillar_results: dict, total: dict, mom: dict, period_date: date) -> None:
+def _print_report(
+    ticker: str, pillar_results: dict, total: dict, mom: dict, period_date: date, profitability_signal: dict
+) -> None:
     print(f"\n=== {ticker} — Alpha Score v2 (finansal dönem: {period_date.isoformat()}) ===")
     for name, weight in pillars.PILLAR_WEIGHTS.items():
         result = pillar_results[name]
         print(f"  [{name} — ağırlık %{weight * 100:.0f}] skor={_fmt(result['score'])}")
         print(f"    {result['notes']}")
+
+    ttm = pillar_results["profitability_ttm"]
+    print(f"  [profitability_ttm — ağırlık yok, sadece bilgi/sinyal] skor={_fmt(ttm['score'])}")
+    print(f"    {ttm['notes']}")
+    print(f"  Kârlılık sinyali: {profitability_signal['message']}")
+
     print(f"\n  TOPLAM SKOR: {_fmt(total['total_score'])}/100")
     print(f"    {total['notes']}")
     print(f"\n  Momentum: {'ZAYIF UYARI' if mom['flag'] else 'normal'}")
@@ -86,14 +94,33 @@ def compute_alpha_score(
     cur = metrics[period_date]
     prev = metrics[prev_period_date] if prev_period_date is not None else None
 
+    # TTM (Trailing Twelve Months, kayan son 12 ay): sadece Kârlılık için,
+    # yıllık hesaplamanın YANINDA, ayrı ve TOPLAM SKORU ETKİLEMEYEN ikinci
+    # bir "erken sinyal" görünümü — bkz. scoring/pillars.py::calculate_profitability_signal
+    # ve normalizer.get_ttm_financials docstring'i (neden Finansal Sağlamlık'a
+    # değil sadece Kârlılık'a eklendiği orada açıklanıyor: F-Score iki tam
+    # dönem arası trende dayanıyor, TTM'e uyarlamak ayrı bir tasarım kararı).
+    ttm_metrics, _ttm_sources, ttm_quarter_dates = normalizer.get_ttm_financials(ticker)
+    profitability_ttm = pillars.calculate_profitability_pillar(
+        ttm_metrics, ttm_quarter_dates=ttm_quarter_dates or None
+    )
+
     pillar_results = {
         "profitability": pillars.calculate_profitability_pillar(cur, period_date),
         "safety": pillars.calculate_safety_pillar(cur, prev, market_data.get("market_cap"), period_date),
         "valuation": pillars.calculate_valuation_pillar(market_data, sector_peer_market_data),
         "size": pillars.calculate_size_pillar(market_data, universe_peer_market_data),
+        "profitability_ttm": profitability_ttm,
     }
 
+    # calculate_total_score sadece PILLAR_WEIGHTS'teki 4 anahtara bakar
+    # ("profitability_ttm" orada yok) — yani TTM burada verilse bile toplam
+    # skoru ETKİLEMEZ, sadece pillar_results'ta (dolayısıyla DB'de) taşınır.
     total = pillars.calculate_total_score({name: r["score"] for name, r in pillar_results.items()})
+
+    profitability_signal = pillars.calculate_profitability_signal(
+        pillar_results["profitability"]["score"], profitability_ttm["score"]
+    )
 
     returns = yfinance_provider.fetch_price_returns(ticker)
     mom = momentum.check_momentum_flag(total["total_score"], returns)
@@ -105,6 +132,7 @@ def compute_alpha_score(
         "market_data": market_data,
         "period_date": period_date,
         "prev_period_date": prev_period_date,
+        "profitability_signal": profitability_signal,
     }
 
 
@@ -118,13 +146,22 @@ def run(
 ) -> None:
     print(f"{ticker}: veri toplanıyor...")
     result = compute_alpha_score(ticker, market_data, sector_peer_market_data, universe_peer_market_data)
-    _print_report(ticker, result["pillar_results"], result["total"], result["momentum"], result["period_date"])
+    _print_report(
+        ticker,
+        result["pillar_results"],
+        result["total"],
+        result["momentum"],
+        result["period_date"],
+        result["profitability_signal"],
+    )
 
     if skip_db:
         return
 
+    # "profitability_ttm" PILLAR_WEIGHTS'te yok (ağırlıklandırılmıyor) —
+    # yine de bilgi amaçlı bir satır olarak yazılıyor, ağırlığı 0.
     pillar_rows = [
-        {"name": name, "score": r["score"], "weight": pillars.PILLAR_WEIGHTS[name], "notes": r["notes"]}
+        {"name": name, "score": r["score"], "weight": pillars.PILLAR_WEIGHTS.get(name, 0), "notes": r["notes"]}
         for name, r in result["pillar_results"].items()
     ]
     db.save_pillar_scores(
@@ -135,6 +172,7 @@ def run(
         total_score=result["total"]["total_score"],
         momentum_flag=result["momentum"]["flag"],
         period_date=result["period_date"],
+        profitability_signal=result["profitability_signal"]["message"],
     )
     print(f"{ticker}: pillar_scores tablosuna yazıldı.")
 
