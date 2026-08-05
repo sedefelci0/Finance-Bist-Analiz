@@ -138,18 +138,27 @@ def _fetch_rendered_financial_table_html(slug: str, timeout_ms: int = 45000) -> 
             browser.close()
 
 
-def fetch_annual_financials(ticker: str, slug: str | None = None) -> dict[date, dict[str, float | None]]:
-    """Belirtilen ticker için KAP'tan yıl sonu (Aralık) dönem kalemlerini çeker.
+def _resolve_slug(ticker: str, slug: str | None) -> str:
+    if slug is not None:
+        return slug
+    bare_ticker = ticker.removesuffix(".IS")  # yfinance ".IS" ekler, KAP eklemez
+    resolved = get_ticker_slug_map().get(bare_ticker)
+    if resolved is None:
+        raise ValueError(f"KAP'ta '{ticker}' için şirket bulunamadı")
+    return resolved
 
-    `slug` verilmezse get_ticker_slug_map() ile bulunur (tek ticker için pratik,
-    toplu taramada slug'ı önceden bulup geçirin).
+
+def fetch_all_periods_financials(ticker: str, slug: str | None = None) -> dict[date, dict[str, float | None]]:
+    """Belirtilen ticker için KAP'ta görünen TÜM dönemleri (yıl sonu + varsa ara
+    dönem — örn. '2026/06') çeker. `slug` verilmezse get_ticker_slug_map() ile bulunur.
+
+    DİKKAT: KAP'ın ara dönem (yıl sonu olmayan) sütunları KÜMÜLATİF'tir (örn.
+    '2026/06' = 1 Ocak - 30 Haziran 2026 toplamı), AYRIK bir çeyrek değil.
+    Bu fonksiyonu doğrudan "çeyreklik veri" gibi kullanmayın — normalizer.py
+    ::get_ttm_financials bu kümülatif değerleri doğru şekilde (aynı dönemin
+    bir önceki yılıyla farkını alarak) TTM'e çeviriyor.
     """
-    if slug is None:
-        bare_ticker = ticker.removesuffix(".IS")  # yfinance ".IS" ekler, KAP eklemez
-        slug = get_ticker_slug_map().get(bare_ticker)
-        if slug is None:
-            raise ValueError(f"KAP'ta '{ticker}' için şirket bulunamadı")
-
+    slug = _resolve_slug(ticker, slug)
     html = _fetch_rendered_financial_table_html(slug)
     soup = BeautifulSoup(html, "html.parser")
 
@@ -165,7 +174,15 @@ def fetch_annual_financials(ticker: str, slug: str | None = None) -> dict[date, 
         if not rows:
             continue
 
-        header_cells = rows[0].find_all(["th", "td"])
+        # [1:] : başlık satırının İLK hücresi tablo adı/başlığı (örn. "FİNANSAL
+        # DURUM TABLOSU"), bir dönem değil — veri satırlarında da cells[1:]
+        # ile kalem adı (ilk hücre) atlanıp sadece değerler alınıyor (aşağıda).
+        # Bu [1:] eksikti: period_dates 5 eleman (baştaki None dahil), değer
+        # hücreleri 4 eleman oluyordu, zip() ikisini KAYDIRARAK eşleştirip her
+        # dönemi bir sonraki dönemin değeriyle etiketliyordu (örn. '2025/12'
+        # etiketli satır aslında '2026/06'nın rakamını taşıyordu) — ciddi bir
+        # veri hatası, TTM köprüleme özelliği geliştirilirken fark edildi.
+        header_cells = rows[0].find_all(["th", "td"])[1:]
         period_dates: list[date | None] = [_period_label_to_date(c.get_text()) for c in header_cells]
         if not any(period_dates):
             continue
@@ -200,9 +217,7 @@ def fetch_annual_financials(ticker: str, slug: str | None = None) -> dict[date, 
                 if label not in label_to_values:
                     continue
                 for period_date, cell in zip(period_dates, label_to_values[label]):
-                    # Sadece yıl sonu (Aralık) dönemlerini tutuyoruz — Piotroski
-                    # yıllık karşılaştırma kullanıyor, ara dönem verisi bu MVP'de gereksiz.
-                    if period_date is None or period_date.month != 12:
+                    if period_date is None:
                         continue
                     value = _parse_turkish_number(cell.get_text())
                     if value is not None:
@@ -211,3 +226,14 @@ def fetch_annual_financials(ticker: str, slug: str | None = None) -> dict[date, 
                 break  # bu metrik için ilk uygun aday etiket kullanıldı
 
     return results
+
+
+def fetch_annual_financials(ticker: str, slug: str | None = None) -> dict[date, dict[str, float | None]]:
+    """Belirtilen ticker için KAP'tan yıl sonu (Aralık) dönem kalemlerini çeker.
+
+    fetch_all_periods_financials'ın yıl sonu olmayan (ara dönem/kümülatif)
+    sütunları eleyen hali — Piotroski/Altman gibi yıllık karşılaştırma
+    kullanan hesaplamalar için bu fonksiyon kullanılır.
+    """
+    all_periods = fetch_all_periods_financials(ticker, slug)
+    return {period_date: metrics for period_date, metrics in all_periods.items() if period_date.month == 12}

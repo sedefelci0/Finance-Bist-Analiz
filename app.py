@@ -83,9 +83,11 @@ ise **göreceli** (peer grubuna göre yüzdelik dilim / percentile) puanlanıyor
 | Brüt marj | Brüt Kâr ÷ Hasılat | %0 | %40 |
 | Faaliyet marjı | EBIT ÷ Hasılat | %0 | %25 |
 
-*(Kârlılık (Son 12 Ay / TTM) aynı 4 formülü kullanır, sadece girdiler son 4
-çeyreğin toplamına/en son çeyreğin bilançosuna dayanır — yıllık kapanmış tam
-mali yıl yerine kayan son 12 ay.)*
+*(Kârlılık (Son 12 Ay / TTM) aynı 4 formülü kullanır, sadece girdiler
+yıllık kapanmış tam mali yıl yerine kayan son 12 aya dayanır — normalde
+yfinance'in son 4 çeyreğinin toplamı, ama yfinance'in çeyreklik verisi
+gecikmişse (KAP'ta daha yeni bir açıklama varsa) o taze veriyle
+"köprülenip" güncellenir; hangisi kullanıldığı pillar notlarında görünür.)*
 
 **Finansal Sağlamlık** — 4 sinyalin ağırlıklı ortalaması:
 - **F-Score + Z-Score bileşik (%50)**: F-Score, Piotroski'nin 9 kriterlik testi

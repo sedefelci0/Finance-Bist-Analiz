@@ -67,13 +67,17 @@ def _period_prefix(period_date: date | None, ttm_quarter_dates: list[date] | Non
     """Dönemsel (finansal tablo bazlı) pillar notes'larının başına eklenen 'Dönem: ...' etiketi.
 
     ttm_quarter_dates verilirse (TTM/kısa dönem hesaplaması — bkz.
-    calculate_profitability_pillar), period_date yerine "TTM (son 4 çeyrek,
-    ...)" etiketi üretilir; normalizer.get_ttm_financials'ın 3. dönüş değeri
-    (en yeniden en eskiye 4 çeyrek tarihi) doğrudan buraya verilebilir.
+    calculate_profitability_pillar), period_date yerine "Dönem: TTM (kayan
+    12 ay, ...)" etiketi üretilir; normalizer.get_ttm_financials'ın 3. dönüş
+    değeri (pencere başlangıç/bitiş tarihleri) doğrudan buraya verilebilir.
+    Pencere yfinance'in son 4 (ayrık) çeyreğinden GELEBİLİR ya da KAP'ın daha
+    güncel kümülatif verisiyle "köprülenmiş" olabilir (bkz.
+    normalizer.py::_try_kap_bridge) — ikisi de aynı şekilde gösteriliyor,
+    hangi kaynaktan geldiği her metriğin kendi notes'unda (source) belli.
     """
     if ttm_quarter_dates:
         oldest, newest = min(ttm_quarter_dates), max(ttm_quarter_dates)
-        return f"Dönem: TTM (son 4 çeyrek, {oldest.isoformat()} - {newest.isoformat()}) — "
+        return f"Dönem: TTM (kayan 12 ay, {oldest.isoformat()} - {newest.isoformat()}) — "
     if period_date is not None:
         return f"Dönem: {period_date.isoformat()} (yıllık) — "
     return "Dönem: bilinmiyor — "
