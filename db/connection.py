@@ -186,7 +186,7 @@ def save_pillar_scores(
                 VALUES
                     (:ticker, :calculation_date, :pillar_name, :pillar_score, :pillar_weight,
                      :total_score, :momentum_flag, :notes, :period_date, :profitability_signal,
-                     :f_score_detail::jsonb, :created_at)
+                     CAST(:f_score_detail AS jsonb), :created_at)
                 """
             ),
             [
