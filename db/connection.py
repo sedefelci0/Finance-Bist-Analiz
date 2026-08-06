@@ -5,6 +5,7 @@ bağlanır (bkz. proje mimarisi: Data Provider -> Normalizer -> Database -> Scor
 """
 from __future__ import annotations
 
+import json
 import os
 from datetime import date, datetime
 from pathlib import Path
@@ -152,7 +153,10 @@ def save_pillar_scores(
 ) -> None:
     """Alpha Score v2 sonucunu pillar_scores tablosuna yazar.
 
-    pillars: [{"name": str, "score": float | None, "weight": float, "notes": str}, ...]
+    pillars: [{"name": str, "score": float | None, "weight": float, "notes": str,
+               "f_score_detail": dict | None}, ...] — f_score_detail sadece
+    "safety" satırında dolu olur (bkz. scoring/pillars.py::calculate_safety_pillar),
+    diğer pillar'larda anahtar hiç yoksa None yazılır.
     period_date: Kârlılık/Sağlamlık'ın dayandığı mali dönem sonu (örn.
     2024-12-31) — calculation_date (script'in ÇALIŞTIĞI tarih) ile
     KARIŞTIRILMASIN. Değerleme/Büyüklük anlık piyasa verisine dayandığı için
@@ -177,10 +181,12 @@ def save_pillar_scores(
                 """
                 INSERT INTO pillar_scores
                     (ticker, calculation_date, pillar_name, pillar_score, pillar_weight,
-                     total_score, momentum_flag, notes, period_date, profitability_signal, created_at)
+                     total_score, momentum_flag, notes, period_date, profitability_signal,
+                     f_score_detail, created_at)
                 VALUES
                     (:ticker, :calculation_date, :pillar_name, :pillar_score, :pillar_weight,
-                     :total_score, :momentum_flag, :notes, :period_date, :profitability_signal, :created_at)
+                     :total_score, :momentum_flag, :notes, :period_date, :profitability_signal,
+                     :f_score_detail::jsonb, :created_at)
                 """
             ),
             [
@@ -195,6 +201,13 @@ def save_pillar_scores(
                     "notes": p["notes"],
                     "period_date": period_date,
                     "profitability_signal": profitability_signal,
+                    # date/datetime alanları (period_date, prev_period_date) JSON'a
+                    # gömülü — default=str ile ISO metne çeviriyoruz.
+                    "f_score_detail": (
+                        json.dumps(p["f_score_detail"], default=str)
+                        if p.get("f_score_detail") is not None
+                        else None
+                    ),
                     "created_at": run_timestamp,
                 }
                 for p in pillars

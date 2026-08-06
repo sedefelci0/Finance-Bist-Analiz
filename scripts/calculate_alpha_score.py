@@ -111,7 +111,9 @@ def compute_alpha_score(
 
     pillar_results = {
         "profitability": pillars.calculate_profitability_pillar(cur, period_date),
-        "safety": pillars.calculate_safety_pillar(cur, prev, market_data.get("market_cap"), period_date),
+        "safety": pillars.calculate_safety_pillar(
+            cur, prev, market_data.get("market_cap"), period_date, prev_period_date
+        ),
         "valuation": pillars.calculate_valuation_pillar(market_data, sector_peer_market_data),
         "size": pillars.calculate_size_pillar(market_data, universe_peer_market_data),
         "profitability_ttm": profitability_ttm,
@@ -165,7 +167,13 @@ def run(
     # "profitability_ttm" PILLAR_WEIGHTS'te yok (ağırlıklandırılmıyor) —
     # yine de bilgi amaçlı bir satır olarak yazılıyor, ağırlığı 0.
     pillar_rows = [
-        {"name": name, "score": r["score"], "weight": pillars.PILLAR_WEIGHTS.get(name, 0), "notes": r["notes"]}
+        {
+            "name": name,
+            "score": r["score"],
+            "weight": pillars.PILLAR_WEIGHTS.get(name, 0),
+            "notes": r["notes"],
+            "f_score_detail": r.get("f_score_detail"),
+        }
         for name, r in result["pillar_results"].items()
     ]
     db.save_pillar_scores(

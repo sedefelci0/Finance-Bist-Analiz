@@ -207,7 +207,11 @@ def calculate_profitability_signal(annual_score: float | None, ttm_score: float 
 
 
 def calculate_safety_pillar(
-    metrics: Metrics, prev_metrics: Metrics | None, market_cap: float | None, period_date: date | None = None
+    metrics: Metrics,
+    prev_metrics: Metrics | None,
+    market_cap: float | None,
+    period_date: date | None = None,
+    prev_period_date: date | None = None,
 ) -> dict:
     """Pillar 2 (%30): (F-Score + Z-Score bileşik) %50, uzun vadeli borç disiplini %25, cari oran %25.
 
@@ -215,6 +219,12 @@ def calculate_safety_pillar(
     skorlarının ortalaması "safety_core" olarak tek bir bileşen sayılıyor
     (kullanıcı notu: ikisi de kötüyse düşük, ikisi de iyiyse yüksek,
     çelişirlerse ortalanır — basit ortalama bunu doğal olarak sağlıyor).
+
+    ŞEFFAFLIK: Dönüşteki "f_score_detail" anahtarı, F-Score'un 9 kriterinin
+    tek tek sonucunu + kullanılan ham verileri taşır (bkz.
+    scoring/piotroski.py::calculate_f_score) — app.py'nin "neden bu puan?"
+    ekranı için. Bu sadece EKSTRA bilgi taşıyor, "score" hesaplamasını
+    etkilemiyor.
 
     period_date: metrics'in ait olduğu mali dönem sonu — sadece notes'ta
     şeffaflık için (bkz. calculate_profitability_pillar'daki aynı parametre).
@@ -233,6 +243,18 @@ def calculate_safety_pillar(
         if f_result["calculated_count"] > 0
         else None
     )
+
+    # UI şeffaflığı için: gerçek dönem tarihlerini (placeholder değil) ve
+    # F-Score'un ham kriter kırılımını bir arada taşıyan paket.
+    f_score_detail = {
+        "period_date": period_date,
+        "prev_period_date": prev_period_date,
+        "criteria": f_result["criteria"],
+        "calculated_count": f_result["calculated_count"],
+        "unavailable_count": f_result["unavailable_count"],
+        "total_score": f_result["total_score"],
+        "raw_metrics": f_result["raw_metrics"],
+    }
 
     z_result = altman_z.calculate_altman_z(metrics, market_cap)
     z_normalized = None
@@ -291,6 +313,7 @@ def calculate_safety_pillar(
             "score": None,
             "notes": _period_prefix(period_date)
             + "veri yok: F-Score, Z-Score, kaldıraç değişimi, cari oran hiçbiri hesaplanamadı",
+            "f_score_detail": f_score_detail,
         }
 
     total_weight = sum(w for _, w in weighted_parts)
@@ -305,7 +328,7 @@ def calculate_safety_pillar(
         f"cari oran={'%.2f' % current_ratio if current_ratio is not None else 'yok'}"
     )
 
-    return {"score": score, "notes": notes}
+    return {"score": score, "notes": notes, "f_score_detail": f_score_detail}
 
 
 def calculate_valuation_pillar(market_data: dict, peer_market_data: list[dict]) -> dict:

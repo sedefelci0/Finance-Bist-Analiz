@@ -75,6 +75,11 @@ CREATE TABLE IF NOT EXISTS pillar_scores (
 ALTER TABLE pillar_scores ADD COLUMN IF NOT EXISTS period_date DATE;
 ALTER TABLE pillar_scores ADD COLUMN IF NOT EXISTS profitability_signal TEXT;
 ALTER TABLE pillar_scores ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
+-- f_score_detail: sadece pillar_name = 'safety' satırında dolu — F-Score'un 9 kriterinin
+-- tek tek sonucu + ham veri (bkz. scoring/piotroski.py::calculate_f_score dönüş değeri).
+-- app.py bu JSON'u "şeffaf karar destek sistemi" UI'ında (kriter tablosu, kategori
+-- kartları, donut grafik, mini karşılaştırmalar, "neden?" açıklamaları) kullanıyor.
+ALTER TABLE pillar_scores ADD COLUMN IF NOT EXISTS f_score_detail JSONB;
 
 CREATE INDEX IF NOT EXISTS idx_pillar_scores_lookup
     ON pillar_scores (ticker, calculation_date);

@@ -18,12 +18,15 @@ from __future__ import annotations
 
 import subprocess
 
+import altair as alt
 import pandas as pd
 import streamlit as st
 from sqlalchemy import text
 
 from db import connection as db
 from providers import news_provider
+from scoring import ai_commentary
+from scoring.fscore_criteria_definitions import CATEGORIES, CRITERIA_INFO, build_why_explanation
 
 st.set_page_config(page_title="BIST Alpha Score", page_icon="📊", layout="wide")
 
@@ -180,7 +183,7 @@ def load_latest_pillar_scores() -> pd.DataFrame:
         """
         SELECT ps.ticker, ps.calculation_date, ps.pillar_name, ps.pillar_score,
                ps.pillar_weight, ps.total_score, ps.momentum_flag, ps.notes, ps.period_date,
-               ps.profitability_signal
+               ps.profitability_signal, ps.f_score_detail
         FROM pillar_scores ps
         INNER JOIN (
             SELECT ticker, MAX(created_at) AS max_created_at
@@ -216,6 +219,204 @@ def build_overview_table(df: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+# --- F-Score "şeffaf karar destek sistemi" bölümü ------------------------
+# Sadece pillar_name = "safety" satırının notes'unun ALTINA eklenen UI —
+# hesaplama mantığına dokunmuyor, scoring/pillars.py::calculate_safety_pillar'ın
+# döndürdüğü f_score_detail'ı (bkz. db.save_pillar_scores) görselleştiriyor.
+
+_RAW_METRIC_LABELS = {
+    "net_income": "Net Kâr",
+    "operating_cash_flow": "Faaliyet Nakit Akışı",
+    "total_assets": "Toplam Varlıklar",
+    "long_term_debt": "Uzun Vadeli Borç",
+    "current_assets": "Dönen Varlıklar",
+    "current_liabilities": "Kısa Vadeli Yükümlülükler",
+    "shares_outstanding": "Hisse Sayısı",
+    "gross_profit": "Brüt Kâr",
+    "revenue": "Hasılat",
+}
+
+
+def _extract_f_score_detail(value) -> dict | None:
+    """pillar_scores.f_score_detail (JSONB) -> dict, ya da None (kayıt yok/eski tarama)."""
+    if value is None:
+        return None
+    if isinstance(value, float) and pd.isna(value):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _fmt_by_kind(fmt: str | None, value) -> str:
+    if value is None:
+        return "veri yok"
+    if fmt == "percent":
+        return f"{value:.2%}"
+    if fmt == "currency":
+        return f"{value:,.0f} TL"
+    if fmt == "count":
+        return f"{value:,.0f}"
+    return f"{value:.2f}"  # ratio ve tanımsız format
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def _get_ai_commentary(ticker: str, f_score_detail: dict) -> str:
+    """AI yorumunu (varsa) üretir, başarısız olursa şablon fallback'e düşer.
+
+    24 saat cache'leniyor — her sayfa yenilemesinde yeniden LLM çağrısı
+    yapılmasını (maliyet + gecikme) önlemek için; ticker + f_score_detail
+    değiştiğinde (yeni tarama) cache anahtarı da değişir.
+    """
+    text_ = ai_commentary.generate_ai_commentary(f_score_detail, ticker)
+    if text_:
+        return text_
+    return ai_commentary.generate_fallback_commentary(f_score_detail, ticker)
+
+
+def render_fscore_transparency(ticker: str, detail: dict) -> None:
+    criteria = detail.get("criteria", [])
+    if not criteria:
+        st.caption("Kriter kırılımı boş.")
+        return
+
+    total = detail.get("total_score", 0)
+    calculated = detail.get("calculated_count", 0)
+    st.markdown("#### F-Score — Kriter Kırılımı")
+    st.caption(
+        f"{calculated} kriterden {total} tanesi sağlandı. Bu, Finansal Sağlamlık "
+        "pillar'ının SADECE bir bileşeni (F-Score+Z-Score bileşik %50) — üstteki "
+        "pillar skoru bunun tek başına aynısı değil."
+    )
+
+    # 1) Kriter kırılım tablosu
+    rows = []
+    for c in criteria:
+        info = CRITERIA_INFO.get(c["name"], {})
+        if c["score"] is None:
+            verdict = "❔ veri yok"
+        elif c["score"] == 1:
+            verdict = "✅ sağlandı"
+        else:
+            verdict = "❌ sağlanmadı"
+        desc = info.get("description", "")
+        rows.append(
+            {
+                "Kriter": info.get("label", c["name"]),
+                "Sonuç": verdict,
+                "Açıklama": (desc[:110] + "…") if len(desc) > 110 else desc,
+            }
+        )
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+
+    # 2) Kategori kartları (klasik Piotroski 3 grubu)
+    st.markdown("**Kategori Bazında Özet**")
+    cat_summary: dict[str, list[int]] = {key: [0, 0] for key in CATEGORIES}
+    for c in criteria:
+        cat = CRITERIA_INFO.get(c["name"], {}).get("category")
+        if cat is None or c["score"] is None:
+            continue
+        cat_summary[cat][1] += 1
+        if c["score"] == 1:
+            cat_summary[cat][0] += 1
+    cat_cols = st.columns(3)
+    for col, (key, info) in zip(cat_cols, sorted(CATEGORIES.items(), key=lambda kv: kv[1]["order"])):
+        passed, cnt = cat_summary[key]
+        col.metric(info["label"], f"{passed}/{cnt}" if cnt else "veri yok")
+
+    # 3) Donut grafik — sağlandı (yeşil) / sağlanmadı (kırmızı) / veri yok (nötr)
+    # Renkler dataviz palette'inin sabit status renkleri: good=#0ca30c, critical=#d03b3b.
+    passed_n = sum(1 for c in criteria if c["score"] == 1)
+    failed_n = sum(1 for c in criteria if c["score"] == 0)
+    na_n = sum(1 for c in criteria if c["score"] is None)
+    donut_rows = [
+        {"Durum": "✅ Sağlandı", "Sayı": passed_n, "Renk": "#0ca30c"},
+        {"Durum": "❌ Sağlanmadı", "Sayı": failed_n, "Renk": "#d03b3b"},
+    ]
+    if na_n:
+        donut_rows.append({"Durum": "❔ Veri Yok", "Sayı": na_n, "Renk": "#898781"})
+    donut_data = pd.DataFrame([r for r in donut_rows if r["Sayı"] > 0])
+    if not donut_data.empty:
+        donut_chart = (
+            alt.Chart(donut_data)
+            .mark_arc(innerRadius=60)
+            .encode(
+                theta=alt.Theta("Sayı:Q"),
+                color=alt.Color(
+                    "Durum:N",
+                    scale=alt.Scale(domain=donut_data["Durum"].tolist(), range=donut_data["Renk"].tolist()),
+                    legend=alt.Legend(title=None),
+                ),
+                tooltip=["Durum", "Sayı"],
+            )
+            .properties(height=220)
+        )
+        st.altair_chart(donut_chart, use_container_width=True)
+
+    # 4) Mini karşılaştırma — önceki dönem vs bu dönem (sayısal kriterler)
+    st.markdown("**Önceki Dönem vs Bu Dönem**")
+    compare_rows = []
+    for c in criteria:
+        d = c.get("detail") or {}
+        if d.get("kind") != "compare_periods":
+            continue
+        prev_v, cur_v = d.get("prev"), d.get("cur")
+        if prev_v is None or cur_v is None:
+            continue
+        pct = ((cur_v - prev_v) / abs(prev_v) * 100) if prev_v != 0 else None
+        label = CRITERIA_INFO.get(c["name"], {}).get("label", c["name"])
+        compare_rows.append(
+            {
+                "Kriter": label,
+                "Önceki Dönem": _fmt_by_kind(d.get("format"), prev_v),
+                "Bu Dönem": _fmt_by_kind(d.get("format"), cur_v),
+                "Değişim": f"{pct:+.1f}%" if pct is not None else "—",
+            }
+        )
+    if compare_rows:
+        st.dataframe(pd.DataFrame(compare_rows), hide_index=True, use_container_width=True)
+    else:
+        st.caption("Karşılaştırılabilir (iki dönemli) sayısal kriter bulunamadı.")
+
+    # 5) Kriter bazında "Neden?" açıklamaları
+    st.markdown("**Kriter Bazında \"Neden?\" Açıklamaları**")
+    for c in criteria:
+        label = CRITERIA_INFO.get(c["name"], {}).get("label", c["name"])
+        icon = "✅" if c["score"] == 1 else ("❌" if c["score"] == 0 else "❔")
+        with st.expander(f"{icon} {label}"):
+            st.markdown(build_why_explanation(c["name"], c["notes"], c["score"]))
+
+    # 6) AI Yorumu (LLM varsa, yoksa/başarısızsa şablon fallback)
+    st.markdown("**🤖 AI Yorumu**")
+    st.info(_get_ai_commentary(ticker, detail))
+
+    # 7) Ham finansal veri tablosu
+    st.markdown("**Ham Finansal Veriler**")
+    raw = detail.get("raw_metrics") or {}
+    cur_raw, prev_raw = raw.get("cur") or {}, raw.get("prev") or {}
+    ordered_keys = list(_RAW_METRIC_LABELS)
+    all_keys = sorted(
+        set(cur_raw) | set(prev_raw),
+        key=lambda k: ordered_keys.index(k) if k in ordered_keys else len(ordered_keys),
+    )
+    raw_rows = []
+    for key in all_keys:
+        prev_v, cur_v = prev_raw.get(key), cur_raw.get(key)
+        change = None
+        if prev_v is not None and cur_v is not None and prev_v != 0:
+            change = (cur_v - prev_v) / abs(prev_v) * 100
+        raw_rows.append(
+            {
+                "Metrik": _RAW_METRIC_LABELS.get(key, key),
+                "Önceki Dönem": f"{prev_v:,.0f}" if prev_v is not None else "—",
+                "Bu Dönem": f"{cur_v:,.0f}" if cur_v is not None else "—",
+                "Değişim %": f"{change:+.1f}%" if change is not None else "—",
+            }
+        )
+    if raw_rows:
+        st.dataframe(pd.DataFrame(raw_rows), hide_index=True, use_container_width=True)
+    else:
+        st.caption("Ham veri bulunamadı.")
+
+
 def main() -> None:
     st.title("📊 BIST Alpha Score")
     st.caption(
@@ -242,7 +443,7 @@ def main() -> None:
 
     col1, col2, col3 = st.columns([3, 1, 1])
     with col1:
-        search = st.text_input("Ticker ara", placeholder="örn. TUPRS")
+        search = st.text_input("Hisse ara", placeholder="örn. TUPRS")
     with col2:
         only_weak_momentum = st.checkbox("Sadece momentum uyarılı", value=False)
     with col3:
@@ -296,8 +497,22 @@ def main() -> None:
 
     st.divider()
     st.subheader("Hisse Detayı")
-    ticker_options = sorted(overview["ticker"].tolist())
-    selected = st.selectbox("Bir ticker seçin", ticker_options)
+
+    # Arama kutusuna yazılan hisse tek bir eşleşmeye daraldıysa (örn. tam
+    # ticker yazıldıysa), aşağıdaki seçim kutusuna dokunmaya GEREK KALMADAN
+    # doğrudan o hissenin detayı gösterilir — kullanıcı geri bildirimi:
+    # "2 kere seçmek istemiyorum". Arama boşsa ya da birden fazla eşleşme
+    # varsa, seçim kutusu sadece o (daraltılmış) sonuçlar arasından seçtiriyor.
+    detail_options = sorted(filtered["ticker"].tolist()) if search else sorted(overview["ticker"].tolist())
+
+    if not detail_options:
+        st.info("Aramanızla eşleşen bir hisse yok.")
+        selected = None
+    elif search and len(detail_options) == 1:
+        selected = detail_options[0]
+        st.caption(f"**{selected}** — tek eşleşme, detayı aşağıda:")
+    else:
+        selected = st.selectbox("Bir ticker seçin", detail_options)
 
     if selected:
         ticker_rows = df[df["ticker"] == selected].set_index("pillar_name")
@@ -354,6 +569,18 @@ def main() -> None:
                 score_text = f"{score:.0f}/100" if pd.notna(score) else "veri yok"
                 with st.expander(f"{_PILLAR_LABELS[p]} — {score_text}"):
                     st.write(ticker_rows.loc[p, "notes"])
+                    if p == "safety":
+                        f_detail = _extract_f_score_detail(ticker_rows.loc[p, "f_score_detail"])
+                        st.divider()
+                        if f_detail:
+                            render_fscore_transparency(selected, f_detail)
+                        else:
+                            st.caption(
+                                "F-Score kriter kırılımı bu kayıt için mevcut değil — "
+                                "hisse bu özellik eklenmeden önce taranmış olabilir. "
+                                "`python scripts/calculate_alpha_score.py` ile yeniden "
+                                "taratınca görünür."
+                            )
         if "profitability_ttm" in ticker_rows.index:
             score_text = f"{ttm_score:.0f}/100" if pd.notna(ttm_score) else "veri yok"
             with st.expander(f"Kârlılık (Son 12 Ay / TTM) — {score_text}"):
