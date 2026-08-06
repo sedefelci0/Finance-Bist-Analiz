@@ -1,13 +1,15 @@
-name: Haftalık BIST Taraması
+name: Haftada 3 Kez BIST Taraması
 
 # Zamanlama (cron UTC'dir, Türkiye UTC+3 — yaz saati uygulaması yok, sabit +3):
 #   Pazartesi 09:00 TRT = 06:00 UTC -> hafta başı, piyasa açılışından önce
+#   Çarşamba  09:00 TRT = 06:00 UTC -> hafta ortası, Pts-Cuma arası boşluğu kısaltmak için
 #   Cuma      18:15 TRT = 15:15 UTC -> BIST kapanışından (18:00 TRT) sonra
 # workflow_dispatch: GitHub'ın "Actions" sekmesinden elle de tetiklenebilir
 # (zamanlamayı beklemeden test etmek için kullanışlı).
 on:
   schedule:
     - cron: "0 6 * * 1"
+    - cron: "0 6 * * 3"
     - cron: "15 15 * * 5"
   workflow_dispatch: {}
 
