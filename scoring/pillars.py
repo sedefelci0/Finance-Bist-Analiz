@@ -177,10 +177,19 @@ def calculate_profitability_signal(annual_score: float | None, ttm_score: float 
     Dönüş: {"signal": "toparlanma" | "bozulma" | "stabil" | None, "diff": float | None, "message": str}
     """
     if annual_score is None or ttm_score is None:
+        # Kullanıcı geri bildirimi: "yıllık veya TTM" belirsizdi — genel
+        # tabloda Kârlılık (yıllık) dolu görünürken bu mesaj çelişkili
+        # görünüyordu. Artık HANGİSİNİN eksik olduğu açıkça yazıyor.
+        if annual_score is None and ttm_score is None:
+            missing_desc = "hem yıllık hem TTM Kârlılık skoru eksik"
+        elif annual_score is None:
+            missing_desc = "yıllık Kârlılık skoru eksik (TTM mevcut)"
+        else:
+            missing_desc = "TTM Kârlılık skoru eksik (yıllık mevcut) — muhtemelen bu hissede yfinance'te yeterli çeyreklik veri yok"
         return {
             "signal": None,
             "diff": None,
-            "message": "veri yok: yıllık veya TTM Kârlılık skoru eksik, sinyal hesaplanamadı",
+            "message": f"veri yok: {missing_desc}, sinyal hesaplanamadı",
         }
 
     diff = ttm_score - annual_score
