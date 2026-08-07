@@ -52,14 +52,28 @@ _KAP_TTM_STOCK_METRICS = {
     "total_liabilities",
 }
 
-# yfinance'in en güncel yıllık döneminin "bayat" sayılması için eşik — yıllık
-# raporlar genelde dönem sonundan birkaç ay sonra yayınlanır, ~13 ay güvenli
-# bir tolerans. Bu eşiğin üzerindeyse yfinance'in o dönemi TÜM alanları dolu
-# olsa bile (bkz. get_financials'taki has_gaps mantığı) "eksik" sayılır ki
-# KAP'ta yfinance'in hiç bilmediği DAHA YENİ bir dönem varsa (örn. yeni
-# listelenmiş/az takip edilen bir şirkette yfinance yıllarca güncellenmeyebilir)
-# gözden kaçmasın.
-_STALE_ANNUAL_THRESHOLD_DAYS = 400
+# En güncel yıllık dönemin "bayat" sayılması için eşik — yıllık raporlar
+# genelde dönem sonundan birkaç ay sonra yayınlanır, ~13 ay güvenli bir
+# tolerans. İKİ YERDE kullanılıyor (tek kaynaktan tutarlı olsun diye):
+#   1) get_financials() içinde: yfinance'in bildiği en güncel dönem bu eşiğin
+#      üzerindeyse, o dönemin TÜM alanları dolu olsa bile (bkz. has_gaps
+#      mantığı) KAP'a bakılır — yoksa KAP'ta yfinance'in hiç bilmediği daha
+#      yeni bir dönem varsa (örn. az takip edilen bir şirkette yfinance
+#      yıllarca güncellenmeyebilir) sessizce gözden kaçar.
+#   2) is_period_stale() üzerinden ÇAĞIRANLAR (örn.
+#      scripts/calculate_alpha_score.py): KAP dahil TÜM kaynaklar tarandıktan
+#      SONRA bile elde edilen en güncel dönem hâlâ bu eşiğin üzerindeyse
+#      (örn. futbol kulüplerinde olduğu gibi "sportif sezon" fiskal yılı
+#      yüzünden tam yıllık kapanış aylarca gecikebiliyor), skor ÜRETİLMEMELİ
+#      — kullanıcı geri bildirimi: eski veriyle üretilmiş bir skor, "veri
+#      yok" demekten daha yanıltıcı.
+STALE_ANNUAL_THRESHOLD_DAYS = 400
+
+
+def is_period_stale(period_date: date | None) -> bool:
+    """period_date, STALE_ANNUAL_THRESHOLD_DAYS'ten daha eskiyse (ya da hiç
+    yoksa) True. bkz. STALE_ANNUAL_THRESHOLD_DAYS docstring'i."""
+    return period_date is None or (date.today() - period_date).days > STALE_ANNUAL_THRESHOLD_DAYS
 
 
 def get_financials(
@@ -80,18 +94,15 @@ def get_financials(
     # hangi dönemlere ihtiyacımız olduğunu bilemeyiz).
     #
     # ayrıca: yfinance'in bildiği en güncel dönem "bayat" (bkz.
-    # _STALE_ANNUAL_THRESHOLD_DAYS) ise de KAP'a bakılır — yoksa yfinance'in
+    # STALE_ANNUAL_THRESHOLD_DAYS) ise de KAP'a bakılır — yoksa yfinance'in
     # SAHİP OLDUĞU eski dönemlerin tüm alanları dolu diye (görünürde "eksik
     # yok"), KAP'ta yfinance'in hiç bilmediği daha yeni bir dönem (örn. az
     # takip edilen bir şirkette yfinance yıllarca güncellenmemiş olabilir)
     # sessizce gözden kaçar — kullanıcı gerçekte 2 yıl önceki kâr rakamlarını
     # "güncel" sanır.
     yf_latest_period = max(yf_metrics.keys()) if yf_metrics else None
-    is_stale = yf_latest_period is None or (
-        (date.today() - yf_latest_period).days > _STALE_ANNUAL_THRESHOLD_DAYS
-    )
     has_gaps = (
-        is_stale
+        is_period_stale(yf_latest_period)
         or any(
             period_metrics.get(metric) is None
             for period_metrics in yf_metrics.values()

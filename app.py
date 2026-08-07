@@ -574,7 +574,12 @@ def main() -> None:
                         st.divider()
                         if f_detail:
                             render_fscore_transparency(selected, f_detail)
-                        else:
+                        elif pd.notna(score):
+                            # score VAR ama detay JSON yok -> bu özellik eklenmeden
+                            # önceki bir taramadan kalma, yeniden taramak çözer.
+                            # score da yoksa (örn. veri çok bayat olduğu için hiç
+                            # hesaplanmadıysa) üstteki notes zaten sebebi açıklıyor
+                            # — burada "yeniden taratın" demek yanıltıcı olurdu.
                             st.caption(
                                 "F-Score kriter kırılımı bu kayıt için mevcut değil — "
                                 "hisse bu özellik eklenmeden önce taranmış olabilir. "

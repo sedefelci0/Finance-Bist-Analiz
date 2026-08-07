@@ -109,11 +109,32 @@ def compute_alpha_score(
         ttm_metrics, ttm_quarter_dates=ttm_quarter_dates or None
     )
 
-    pillar_results = {
-        "profitability": pillars.calculate_profitability_pillar(cur, period_date),
-        "safety": pillars.calculate_safety_pillar(
+    # ÖNEMLİ (kullanıcı geri bildirimi): normalizer, KAP dahil TÜM kaynakları
+    # taradıktan SONRA bile en güncel tam yıllık dönem hâlâ çok eskiyse (örn.
+    # futbol kulüplerinde "sportif sezon" fiskal yılı yüzünden tam yıllık
+    # kapanış aylarca gecikebiliyor — bkz. normalizer.STALE_ANNUAL_THRESHOLD_DAYS),
+    # Kârlılık ve Finansal Sağlamlık pillar'ları HİÇ HESAPLANMAZ — eski veriyle
+    # üretilmiş "gerçekçi görünen" bir skor, açıkça "veri yok" demekten daha
+    # yanıltıcı. Değerleme/Büyüklük bu döneme bağlı değil (anlık piyasa
+    # verisi), etkilenmez.
+    if normalizer.is_period_stale(period_date):
+        gun_farki = (date.today() - period_date).days
+        stale_notes = (
+            f"veri yok: en güncel tam yıllık finansal dönem çok eski (son kapanış: "
+            f"{period_date.isoformat()}, {gun_farki} gün önce) — yanıltıcı olmasın diye "
+            "daha güncel veri yayınlanana kadar skor üretilmiyor"
+        )
+        profitability_result: dict = {"score": None, "notes": stale_notes}
+        safety_result: dict = {"score": None, "notes": stale_notes, "f_score_detail": None}
+    else:
+        profitability_result = pillars.calculate_profitability_pillar(cur, period_date)
+        safety_result = pillars.calculate_safety_pillar(
             cur, prev, market_data.get("market_cap"), period_date, prev_period_date
-        ),
+        )
+
+    pillar_results = {
+        "profitability": profitability_result,
+        "safety": safety_result,
         "valuation": pillars.calculate_valuation_pillar(market_data, sector_peer_market_data),
         "size": pillars.calculate_size_pillar(market_data, universe_peer_market_data),
         "profitability_ttm": profitability_ttm,
