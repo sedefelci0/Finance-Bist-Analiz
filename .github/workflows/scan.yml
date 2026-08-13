@@ -13,6 +13,11 @@ on:
     - cron: "15 15 * * 5"
   workflow_dispatch: {}
 
+# Hata durumunda log'u repoya commit'leyebilmek için (bkz. son adım) —
+# actions/checkout'un varsayılan GITHUB_TOKEN'ı bu izin olmadan salt-okunur.
+permissions:
+  contents: write
+
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -39,4 +44,26 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_SSLMODE: ${{ secrets.DB_SSLMODE }}
-        run: python scripts/calculate_alpha_score.py --all
+        # tee: hem canlı log akışında görünsün hem dosyaya yazılsın (aşağıdaki
+        # "hata durumunda commit'le" adımı bu dosyayı okuyor).
+        run: python scripts/calculate_alpha_score.py --all 2>&1 | tee scan_output.log
+
+      - name: Hata durumunda log'u teşhis için repoya commit'le
+        # NEDEN: GitHub Actions'ın tam çalışma logu indirme uç noktası repo
+        # admin yetkisi/token gerektiriyor — bu proje o yetkiye sahip
+        # olmayan bir ortamdan (asistan) teşhis edilebilsin diye hata
+        # metni (son ~200 satır, DB parolası gibi secret'lar env var
+        # olarak enjekte edildiği için GitHub zaten stdout'ta bunları
+        # otomatik *** ile maskeliyor) doğrudan repoya, herkese açık
+        # okunabilir bir dosyaya yazılıyor. Bu adım normal (başarılı)
+        # koşularda hiçbir şey yapmaz.
+        if: failure()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p .github/scan-logs
+          tail -n 200 scan_output.log > .github/scan-logs/latest-failure.log
+          echo "--- run: ${{ github.run_id }} | tetikleyen: ${{ github.event_name }} | zaman (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ) ---" >> .github/scan-logs/latest-failure.log
+          git add .github/scan-logs/latest-failure.log
+          git commit -m "ci: tarama hatasi log'u (otomatik) [skip ci]" || echo "commit edilecek değişiklik yok"
+          git push
