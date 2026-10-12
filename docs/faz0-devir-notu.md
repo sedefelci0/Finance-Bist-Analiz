@@ -94,3 +94,78 @@ Oturum: 12 Ekim 2026. Sonraki oturum bu dosyayı, ardından `docs/faz0/faz0-rapo
 6. Belge değişiklik önerilerini (rapor bölüm 6) kullanıcıyla tek tek geçip onaylananları belgeye işle.
 7. `scan.yml`'deki pipefail hatası canlıyı etkiliyor; Faz 0 kapsamı dışında ama kullanıcıya ayrı bir
    düzeltme olarak önerilmeli (onaysız değiştirme).
+
+---
+
+## Nasıl yaptık (başka bilgisayarda tekrar üretmek için)
+
+### Kurulum
+```bash
+git clone https://github.com/sedefelci0/Finance-Bist-Analiz.git && cd Finance-Bist-Analiz
+git switch faz0-veri-testi
+python -m venv .venv            # .venv gitignore'da
+# Windows: .venv\Scripts\python   |  Linux/Mac: .venv/bin/python
+.venv/Scripts/python -m pip install yfinance isyatirimhisse borsapy pandas tabulate requests openpyxl
+# yalnızca DB sorgusu ve KAP karşılaştırması için:
+.venv/Scripts/python -m pip install sqlalchemy psycopg2-binary python-dotenv playwright beautifulsoup4
+.venv/Scripts/python -m playwright install chromium
+```
+Kullanılan sürümler: yfinance 1.7.0, isyatirimhisse 5.0.1, borsapy 0.11.0 (Python 3.14 yerelde, 3.12 Actions'ta).
+DB için `.env` gerekir — **repoda yok**, ev bilgisayarına elle kopyalanmalı (`.env.example`'a bak).
+
+### Adım 1 — kaynak testi
+```bash
+.venv/Scripts/python scripts/faz0_source_test.py --out docs/faz0/local      # ~40-60 dk
+.venv/Scripts/python scripts/faz0_source_test.py --out docs/faz0/local --summarize-only
+.venv/Scripts/python scripts/faz0_source_test.py --out docs/faz0/deneme --tickers THYAO,GARAN,AGESA  # hızlı deneme
+```
+Çıktılar: `connectivity.csv`, `raw_values.csv`, `coverage.csv`, `diffs.csv`, `per_ticker.csv`, `summary.md`, `meta.json`.
+`meta.json` makinenin genel IP'sini içerir → commit'lemeden önce `public_ip` alanını sil.
+
+**12 Ekim'deki 2. tam koşu bu (iş) bilgisayarında, push anında 14/20'deydi; çıktısı GitHub'a gitmedi.**
+Evde ya yeniden koş ya da aynı testin Actions sonucunu (aşağıda) kullan.
+
+### İş Yatırım ham cevabına bakmak (kalem kodları)
+```python
+import requests
+u = "https://www.isyatirim.com.tr/_layouts/15/IsYatirim.Website/Common/Data.aspx/MaliTablo"
+p = dict(companyCode="THYAO", exchange="TRY", financialGroup="XI_29",   # banka/sigorta: UFRS_K (konsolide) / UFRS (solo)
+         year1=2026, period1=6, year2=2026, period2=3, year3=2025, period3=12, year4=2025, period4=6)  # EN AZ 4 dönem!
+for it in requests.get(u, params=p, timeout=30).json()["value"]:
+    print(it["itemCode"], it["itemDescTr"], it["value1"], it["value2"], it["value3"], it["value4"])
+```
+
+### Adım 2 — İş Yatırım ↔ KAP
+KAP tarafı projedeki `providers/kap_provider.fetch_all_periods_financials(ticker)` (Playwright) ile okundu;
+İş tarafı yukarıdaki istekle `[(2026,6),(2025,12),(2024,12),(2023,12)]` dönemleri için. Kalemler:
+sanayi `1BL` varlık, `3C` satış, `3L` toplam / `3Z` ana ortaklık net kâr, `2O` ana ortaklık / `2N` toplam özkaynak;
+banka (`UFRS_K`) `1Z`, `3Z`, `2O`. Oran = |İş − KAP| / |KAP|. Sonuç: `docs/faz0/kap_vs_isyatirim.csv`.
+TÜFE kontrolü: `borsapy.Inflation().tufe()` aylık değerlerinin çarpımı.
+
+### Adım 3 — Actions sonucu
+- Workflow: `.github/workflows/faz0-source-test.yml`; `faz0-veri-testi` dalına script/workflow değişikliği push'u
+  ya da (workflow master'a alınırsa) Actions sekmesinden "Run workflow" tetikler.
+- 12 Ekim koşusu: https://github.com/sedefelci0/Finance-Bist-Analiz/actions/runs/38264568323
+  → **Summary** sekmesinde özet tablo, altta `faz0-actions-<run_id>` artifact zip'i (giriş yapmış kullanıcı indirebilir).
+- Durum sorgusu (token gerekmez):
+  `curl -s https://api.github.com/repos/sedefelci0/Finance-Bist-Analiz/actions/runs/38264568323/jobs`
+
+### Adım 4 — evren
+- CSV: `https://www.borsaistanbul.com/datum/hisse_endeks_ds.csv` (`;` ayraçlı, 3. sütun endeks kodu; XYLDZ sayıldı).
+- Actions koşu geçmişi ve adım süreleri: `https://api.github.com/repos/sedefelci0/Finance-Bist-Analiz/actions/runs?per_page=40`
+  ve `.../actions/runs/<id>/jobs` (token gerekmez; log indirmek 403).
+- DB (yalnızca okuma, `.env` ile):
+```python
+from dotenv import load_dotenv; load_dotenv()
+from db.connection import get_engine; from sqlalchemy import text
+with get_engine().connect() as c:
+    c.execute(text("SET TRANSACTION READ ONLY"))
+    for r in c.execute(text("select date(created_at), count(distinct ticker) from pillar_scores group by 1 order by 1 desc")): print(r)
+```
+
+### Adım 5 — pykap / kap-mcp
+`pip install pykap kap-mcp` → `site-packages/kap/data/bist_oid_master.json` (ticker → sector_group, alt_sektor,
+parser_family) ve `sector_taxonomy.json` incelendi. Sunucu olarak çalıştırılmadı.
+
+### Push durumu
+`faz0-veri-testi` dalı GitHub'da (kullanıcı onayıyla push edildi, 12 Ekim). master'a merge edilmedi; PR açılmadı.
