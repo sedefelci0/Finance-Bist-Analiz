@@ -1,0 +1,58 @@
+name: Faz 0 — veri kaynağı erişim testi
+
+# Faz 0 (docs/scoring-v3.md): aynı test script'i bulut IP'sinden çalıştırılır;
+# İş Yatırım, KAP, Borsa İstanbul CSV'si ve Yahoo'ya erişim olup olmadığı ölçülür.
+# DB secret'ı KULLANMAZ, repoya hiçbir şey commit'lemez; sonuç artifact olarak yüklenir.
+#
+# workflow_dispatch yalnızca workflow varsayılan dalda (master) olduğunda
+# Actions sekmesinde görünür. master'a dokunmadan çalıştırabilmek için
+# faz0-veri-testi dalına push da tetikler.
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [faz0-veri-testi]
+    paths:
+      - scripts/faz0_source_test.py
+      - .github/workflows/faz0-source-test.yml
+
+permissions:
+  contents: read
+
+jobs:
+  source-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        # pipefail: scan.yml'deki "python | tee" hatası burada tekrarlanmasın
+        shell: bash -eo pipefail {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bağımlılıkları kur
+        run: pip install yfinance isyatirimhisse borsapy pandas tabulate requests
+
+      - name: Paket sürümlerini kaydet
+        run: pip freeze | grep -i -E "yfinance|isyatirimhisse|borsapy|pandas|requests" | tee pip_versions.txt
+
+      - name: Kaynak testini çalıştır
+        run: python scripts/faz0_source_test.py --out faz0_actions 2>&1 | tee faz0_actions_run.log
+
+      - name: Özeti Actions "Summary" sayfasına yaz
+        if: always()
+        run: cat faz0_actions/summary.md >> "$GITHUB_STEP_SUMMARY" || echo "summary.md üretilmedi" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Sonuçları artifact olarak yükle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: faz0-actions-${{ github.run_id }}
+          path: |
+            faz0_actions/
+            faz0_actions_run.log
+            pip_versions.txt
+          retention-days: 30
