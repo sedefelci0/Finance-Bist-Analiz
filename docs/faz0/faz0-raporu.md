@@ -265,3 +265,76 @@ Finansalların hiçbiri geçmiyor (format farkı). **Öneri: finansal tablolar i
 
 v2 sitesi (`app.py` `load_latest_pillar_scores`) her hissenin en son koşusunu yaş filtresi olmadan gösteriyor;
 Ağustos'taki 270–288 hisselik taramalardan kalan hisseler de listede. 12 Ekim'de DB'de 291 farklı hisse vardı.
+
+---
+
+## 8. KAP fizibilite testi (13 Ekim 2026)
+
+**Karar durumu: finansal tablolar için ana kaynak — KARAR BEKLİYOR.** Kaynak koşulları bulgusu (bölüm 7.1:
+İş Yatırım `robots.txt` `/_layouts/` yolunu, Yahoo API alan adı tüm yolları botlara kapatıyor) nedeniyle
+kullanıcı kararıyla İş Yatırım'a ve Yahoo'ya otomatik istek durduruldu. Aday olarak KAP test edildi.
+
+**Yöntem:** kap-mcp 0.1.0'ın kendi indirme ve ayrıştırıcıları (`ifrs_standard`, `bddk`, `insurance`),
+KAP'ın finansal rapor dosyaları (`home-financial/download-file/{oid}/{yıl}/{dönem}`). 20 hisse × 9 dosya
+(2026Ç2, 2026Ç1, 2025 yılı, 2025 9 ay, 2025Ç2 kümülatif + 2024–2021 yıl sonları). Ham dosyalar yalnızca
+yerel `.faz0/` altında, repoda yok.
+
+**Hız sınırı:** istekler arası 6 sn ile 9 indirmeden sonra KAP bağlantıyı yanıtsız kapattı; 15 dk beklemeden
+sonra açıldı. 30 sn arayla 171 indirme sorunsuz geçti (1 kez bağlantı kesildi, 60 sn sonra tekrar deneme başarılı).
+Sürdürülebilir hız: **30 sn/istek** ile çalışıyor; daha hızlısı denenmedi. Hisse başına 9 dosya ≈ 5 dk.
+
+**Sonuç:** 180 dosyanın 177'si indi ve ayrıştırıldı, 3'ü kaynakta yok (GLRMK 2021–2023 yıl sonları; KAP boş
+ZIP döndürüyor — şirketin o yıllara ait raporu yok; halka arz tarihi doğrulanmadı).
+Tüm dosyalar konsolide. Birim çarpanı dosyadan okunuyor (THYAO milyon, ASELS bin, TMSN TL).
+ASELS 2026/6 "ESAS FAALİYET KARI (ZARARI)" = 22.530.965.000 TL (İş Yatırım ile birebir); GARAN konsolide
+varlık 5.216 mlr (İş Yatırım `UFRS_K` ve yfinance ile birebir).
+
+### 8.1 Eksiklik matrisi — KAP sütunu eklendi (sanayi 16 · finansal 4)
+
+yfinance ve İş Yatırım sütunları bölüm 7.2'den (son dönem); KAP sütunu "5 çeyreğin hepsi · 5 yılın hepsi".
+
+| Kalem | yfinance | İş Yatırım | KAP (5 çeyrek · 5 yıl) |
+|---|---|---|---|
+| geçmiş yıllar kârı (3 kalem) | 15 · 4 | 16 · 4 | sanayi 16/16 · 15/16 |
+| dönen varlıklar | 14 · 0 | 16 · 2 | sanayi 16/16 · 15/16 |
+| EBIT (esas faaliyet kârı) | 14 · 0 | 16 · 0 | sanayi 16/16 · 15/16 |
+| işletme nakit akışı | 15 · 2 | 16 · 0 | sanayi 16/16 · 15/16; **finansallarda nakit akışı tablosu var** |
+| faiz gideri | 15 · 2 | 16 · 2 | sanayi 16/16 · 15/16 (Finansman Giderleri); bankada FAİZ GİDERLERİ |
+| finansal borç (KV + UV borçlanma) | 15 · 4 | 16 · 2 | sanayi 16/16 · 15/16 |
+| çeyreklik net kâr | 11 · 1 | 16 · 4 | sanayi 16/16 · 15/16 |
+| çeyreklik satış | 11 · 1 | 16 · 0 | sanayi 16/16 · 15/16 |
+| özkaynak | 15 · 4 | 16 · 4 | sanayi 16/16 · 15/16 |
+
+Yıllarda eksik olan tek hisse GLRMK (2021–2023 KAP'ta yok). Finansallar için sanayi etiketleri uygulanmaz;
+banka/sigorta kendi formatında geliyor (aşağıda).
+
+### 8.2 Metrik bazında "tüm girdiler var" (sanayi, 16 hisse)
+
+| Metrik | Tüm girdiler var | Eksik |
+|---|---|---|
+| Altman Z (FY2025; piyasa değeri hariç — fiyat kaynağı karar bekliyor) | **16/16** | — |
+| Piotroski F-Score (FY2025 + FY2024) | **16/16** | — |
+| TTM 2026/6 (kümülatif formül: 2026Ç2, 2025Ç2, 2025 yılı) | **16/16** | — |
+| İşletme nakit akışı (5 çeyrek + 5 yıl) | 15/16 | GLRMK (2021–2023) |
+| Faiz gideri (5 çeyrek + 5 yıl) | 15/16 | GLRMK (2021–2023) |
+
+Karşılaştırma: yfinance "tam" şartını aynı 16 hissenin 6'sı geçiyordu (bölüm 7.6).
+
+### 8.3 Banka ve sigorta (KAP)
+
+- Banka (`bddk` ayrıştırıcı, GARAN/AKBNK): VARLIKLAR TOPLAMI, Krediler, MEVDUAT, ÖZKAYNAKLAR, DÖNEM NET KARI,
+  FAİZ GELİRLERİ / FAİZ GİDERLERİ / NET FAİZ GELİRİ, Beklenen Zarar Karşılıkları, nakit akışı (45 satır).
+  **Takipteki krediler ayrı satır olarak yok; sermaye yeterlilik oranı yok** (finansal tablo kalemi değil).
+- Sigorta (`insurance` ayrıştırıcı, AGESA/ANHYT): bilanço 275, gelir tablosu 131, nakit akışı 35 satır.
+
+### 8.4 KAP kullanım koşulları ve MASFN
+
+- KAP ana sayfasındaki 47 bağlantıda kullanım koşulları / yasal uyarı / gizlilik / KVKK / telif bağlantısı
+  **bulunamadı** (alt bilgi muhtemelen JavaScript ile yükleniyor). Kullanıcı elle bakacak.
+- MASFN: KAP şirket sayfasında sektör "ELEKTRİK GAZ VE SU", pazar "YILDIZ PAZAR" → sanayi ailesi, Enerji grubu (15 hisse).
+
+### 8.5 Açık kalanlar
+
+KAP'ın kullanım koşulları; fiyat kaynağı (Yahoo durduruldu); kap-mcp'nin tek sürüm ve PyPI'da lisans alanı
+boş olması (README'de MIT); TMS 29 birim kuralının KAP dosyalarındaki karşılaştırmalı sütunlarla 10 hissede
+doğrulanması (dosyalar yerelde, yeni istek gerekmiyor).

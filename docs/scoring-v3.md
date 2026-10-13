@@ -14,7 +14,7 @@ Tahmin değildir, filtre ve özettir. Yatırım tavsiyesi değildir.
 2. **Şirket aileleri ayrı puanlanır.** Aile içinde, sektör karşılaştırma gruplarına göre yüzdelik hesaplanır.
 3. **Büyüklük skordan çıkarıldı.** Piyasa değeri, likidite ve beta artık filtre/bilgi sütunudur.
 4. **Borç ve nakit akışı Güvenlik pillar'ına girer.** Backlog (sipariş portföyü) Kalite pillar'ında opsiyonel, sınırlı ağırlıklı bir modüldür.
-5. **Veri (Faz 0 sonrası, 13 Ekim):** Finansal tablolar **hisse bazında tek kaynaktan** gelir; kalem kalem karıştırma yok (bkz. bölüm 9 "Veri kaynağı"). Fiyat verisi yfinance'ten (araştırma/eğitim amaçlı) ayrı ve sık çekilir. Sitede yalnızca türetilmiş skorlar gösterilir; ham tablo ve fiyat serisi gösterilmez, ham sağlayıcı verisi repoya girmez.
+5. **Veri (Faz 0 sonrası, 13 Ekim):** Finansal tablolar **hisse bazında tek kaynaktan** gelir; kalem kalem karıştırma yok (bkz. bölüm 9 "Veri kaynağı"). Fiyat verisi yfinance'ten (araştırma/eğitim amaçlı) ayrı ve sık çekilir. **Ana kaynak kararı BEKLEMEDE (13 Ekim):** kaynak koşulları bulgusu (bölüm 9) nedeniyle İş Yatırım'a ve Yahoo'ya otomatik istek kullanıcı söyleyene kadar durduruldu; KAP fizibilitesi test ediliyor. Sitede yalnızca türetilmiş skorlar gösterilir; ham tablo ve fiyat serisi gösterilmez, ham sağlayıcı verisi repoya girmez.
 6. **Geçmişe dönük doğrulama (backtest) ilk sürümden sonraya bırakılabilir.** Ama bölüm 10'daki yayın kuralı zorunludur.
 
 ## 3. Aileler ve karşılaştırma grupları
@@ -29,6 +29,21 @@ Tahmin değildir, filtre ve özettir. Yatırım tavsiyesi değildir.
 **Karşılaştırma grupları (yüzdelik kiminle hesaplanır):**
 - KAP **alt sektör** sınıflandırmasından türetilir (ana sektör yetmez: KAP'ta holding, GYO, aracı kurum, sigorta ve banka hepsi "MALİ KURULUŞLAR" ana sektöründe). Aile ataması alt sektör + tablo formatı (sanayi `XI_29` / banka / sigorta) ile yapılır; istisnalar elle düzeltme listesinde tutulur (örn. SISE KAP'ta "Holdingler ve Yatırım Şirketleri" altında). Her grupta **en az 8 hisse** olmalı. Küçük sektörleri yakın sektörlerle birleştir.
 - Hâlâ 8'den küçükse aile geneliyle karşılaştır ve tabloda "geniş karşılaştırma" etiketi göster.
+
+**149 hisselik XYLDZ evreni için gruplar (13 Ekim, KAP alt sektörü):** sanayi/ticaret/hizmet ailesinde 21 alt sektörün yalnızca 5'i 8 hisse ve üstünde; 16 alt sektör (37 hisse) birleştirilir.
+
+| Grup (sanayi/ticaret/hizmet ailesi) | KAP alt sektörleri | Hisse |
+|---|---|---|
+| Enerji | Elektrik, gaz ve buhar (+ MASFN, KAP sektörü "ELEKTRİK GAZ VE SU") | 15 |
+| Kimya, petrol, kağıt, tekstil | Kimya-ilaç-petrol-lastik-plastik + Ham petrol ve doğal gaz (TRENJ) + Kağıt (LILAK) + Tekstil (KORDS) | 16 |
+| Makine, ulaşım araçları ve savunma | Metal eşya-makine-elektrikli cihaz-ulaşım araçları + Savunma (ASELS, ALTNY) | 15 |
+| Metal ve madencilik | Ana metal sanayi + Metal cevheri madenciliği | 9 |
+| İnşaat ve yapı malzemeleri | Taş ve toprağa dayalı + İnşaat (ENKAI, GLRMK) + Gayrimenkul faaliyetleri (RGYAS) | 12 |
+| Gıda | Gıda, içecek ve tütün | 9 |
+| Ticaret | Perakende + Toptan (DOAS) + Yiyecek-içecek hizmetleri (TABGD) | 8 |
+| Hizmetler ve iletişim | Ulaştırma + Telekom + Bilişim + Sağlık + Spor | 12 |
+
+Diğer aileler tek grup: Banka 8, Sigorta ve diğer finans 10, GYO 15, Holding 20. Tam 8 hisseli gruplar (Banka, Ticaret) bir hisse çıkarsa "geniş karşılaştırma"ya düşer. KAP listesinde olmayan hisse KAP şirket sayfasından elle atanır (MASFN → Enerji). Grup listesi evren her güncellendiğinde yeniden hesaplanır. Kaynak: kap-mcp paketindeki KAP taksonomisi (Nisan 2026).
 - Yüzdelik dilim **grup içinde** hesaplanır. Mutlak eşik kuralları (faiz karşılama < 1, işletme nakit akışı negatif gibi) gruptan bağımsız uygulanır.
 
 ## 4. Pillar'lar — Sanayi/ticaret/hizmet ailesi (ilk sürüm)
@@ -47,7 +62,7 @@ Tahmin değildir, filtre ve özettir. Yatırım tavsiyesi değildir.
 
 **Kalem tanımları (yalnızca sanayi/ticaret/hizmet ailesi, İş Yatırım kaynaklı; 13 Ekim kullanıcı onayı):**
 - **EBIT = "FAALİYET KARI (ZARARI)"** (İş Yatırım kodu `3DF`). Şirketin KAP'taki "ESAS FAALİYET KARI (ZARARI)" satırıyla aynıdır (ASELS 2026/6: 22.530.965 bin TL, birebir). Kapsam: Brüt Kar (Zarar) − Pazarlama, Satış ve Dağıtım Giderleri − Genel Yönetim Giderleri − Araştırma ve Geliştirme Giderleri + Diğer Faaliyet Gelirleri − Diğer Faaliyet Giderleri. **Hariç:** Yatırım Faaliyetlerinden Gelirler/Giderler, Özkaynak Yöntemiyle Değerlenen Yatırımların Kar/Zararlarındaki Paylar, Finansman Gelirleri/Giderleri ve **TMS 29 "Net Parasal Pozisyon Kazançları (Kayıpları)"** (ASELS 2026/6 KAP raporunda finansman giderlerinden sonra, vergi öncesi kârdan önce ayrı satır). "Finansman Gideri Öncesi Faaliyet Karı/Zararı" (`3HACA`) yatırım faaliyeti ve özkaynak yöntemi paylarını içerdiği için **kullanılmaz**.
-- **Geçmiş yıllar kârı (Altman B) = "Geçmiş Yıllar Kar/Zararları" + "Kardan Ayrılan Kısıtlanmış Yedekler"** (`2OCE` + `2OCD`). Kâr yedekleri (kısıtlanmış yedekler) **dahil**, "Dönem Net Kar/Zararı" (`2OCF`) **hariç**.
+- **Geçmiş yıllar kârı (Altman B) = "Geçmiş Yıllar Kar/Zararları" + "Kardan Ayrılan Kısıtlanmış Yedekler" + "Dönem Net Kar/Zararı"** (İş Yatırım `2OCE` + `2OCD` + `2OCF`; KAP dosyasında aynı Türkçe etiketler). Gerekçe: Altman (2000, "Predicting Financial Distress of Companies: Revisiting the Z-Score and ZETA® Models") retained earnings'i "the total amount of reinvested earnings and/or losses of a firm over its entire life" olarak tanımlar; cari dönem kârı da bu birikimin parçasıdır. Kaynak: makalenin Ward's'taki alıntısı; birincil PDF'e erişilemedi (doğrulanamadı).
 - yfinance'in "EBIT" ve "Retained Earnings" satırları bu tanımlarla eşleşmez (ASELS 2024: yfinance EBIT 16,6 mlr, esas faaliyet kârı 35,8 mlr; yfinance geçmiş yıllar kârı 108,3 mlr, yukarıdaki tanım 94,9 mlr). Aynı metrik iki kaynakta farklı tanımla hesaplanırsa yüzdelikler karışır → hisse bazında tek kaynak kuralı (bölüm 9) bu yüzden zorunludur.
 - Bankalarda Z-Score uygulanmaz; sigorta için tanım ayrıca yapılacak.
 
@@ -89,7 +104,7 @@ Neden: GLRMK gibi proje bazlı şirketlerde yıllık kâr geçmişe, backlog gel
 
 - **Para birimi:** tüm hesaplar TL. `financialCurrency != currency` ise o kaynaktan gelen çarpan kullanılmaz, fiyat ve tablolardan kendin hesapla.
 - **Veri kaynağı (hisse bazında tek kaynak):** Bir şirketin finansal tablolarının tamamı ya yfinance'ten ya İş Yatırım'dan gelir; kalem kalem karıştırma yok. Önce yfinance: **"tam"** ise kullanılır, değilse (eksik dönem, USD raporlama — örn. THYAO, ENKAI) tüm set İş Yatırım'dan alınır. **"Tam" tanımı:** son 5 çeyrek + son yıllık dönem (+ F-Score için bir önceki yıllık) mevcut; `financialCurrency == TRY`; gerekli kalemler dolu (ROE, ROIC, marjlar, net borç/FAVÖK, faiz karşılama, işletme nakit akışı, F-Score'un 9 girdisi); en güncel dönem beklenen dönemden eski değil; bilanço özdeşliği (varlık = yükümlülük + özkaynak, %1 tolerans) ve makul aralık kontrolleri geçiyor.
-  **KESİNLEŞMEDİ (13 Ekim):** Faz 0 sayımında 16 sanayi hissesinden yalnızca **6'sı** "tam" geçti (EKGYO, KCHOL, SISE, TMSN, TUPRS, ULKER). Bu kontrol yfinance'in yanlış etiketli çeyreklerini de yakalamıyor (ASELS 2026Ç2 = önceki yılın 6 aylık rakamı). **Öneri: tüm finansal tablolar için İş Yatırım tek ana kaynak; yfinance yalnızca fiyat için.** Karar kullanıcıda. Her kayıtta kaynak, para birimi ve birim (TMS 29 tarihi) saklanır.
+  **KESİNLEŞMEDİ (13 Ekim):** Faz 0 sayımında 16 sanayi hissesinden yalnızca **6'sı** "tam" geçti (EKGYO, KCHOL, SISE, TMSN, TUPRS, ULKER). Bu kontrol yfinance'in yanlış etiketli çeyreklerini de yakalamıyor (ASELS 2026Ç2 = önceki yılın 6 aylık rakamı). Önceki öneri (İş Yatırım tek ana kaynak) **beklemeye alındı (13 Ekim)**: İş Yatırım'ın `robots.txt` dosyası `MaliTablo` uç noktasının bulunduğu `/_layouts/` yolunu tüm botlara kapatıyor; Yahoo'nun API alan adı `Disallow: /`. Kullanıcı söyleyene kadar iki kaynağa da otomatik istek atılmaz. Aday: KAP finansal rapor dosyaları — fizibilite (`docs/faz0/faz0-raporu.md` bölüm 8): 20 hissenin 180 dosyasından 177'si alındı; sanayi 16 hissede Altman Z, Piotroski ve TTM girdileri 16/16 tam; KAP 30 sn/istek hızında sorunsuz, 6 sn'de geçici olarak bağlantı kesiyor. KAP'ın kullanım koşulları bulunamadı (kullanıcı elle bakacak). **Ana kaynak: karar bekliyor.** Fiyat kaynağı da aynı nedenle karar bekliyor. Her kayıtta kaynak, para birimi ve birim (TMS 29 tarihi) saklanır.
 - **Çekme sıklığı:** İş Yatırım yavaş (Faz 0: 20 hissede 17–31 zaman aşımı). Tablo bir kez çekilir, ham hâliyle Neon'da saklanır, yalnızca yeni bilanço açıklanınca yeniden çekilir. İş Yatırım uç noktası en az 4 dönem istenmezse boş liste döner; "0 kalem" hata sayılır. Fiyat ayrı ve sık çekilir.
 - **Gösterim:** sitede yalnızca türetilmiş skorlar ve oranlar; ham tablo ve fiyat serisi gösterilmez, repoya da girmez.
 - **Uç değer kırpma:** marj, ROE, ROIC [−100, +100]; cari oran üst sınır 10; Z-Score üst sınır 10. F/K ve diğer çarpanlarda negatif ya da anlamsız değerler "eksik" sayılır.
@@ -97,7 +112,7 @@ Neden: GLRMK gibi proje bazlı şirketlerde yıllık kâr geçmişe, backlog gel
 - **Sürüm:** her kayıtta `score_version` ('v3'). v2 kayıtları silinmez.
 - **Eski kayıt:** tabloda 7 günden eski kayıtlar gri ve "N gün önce" etiketiyle gösterilir, varsayılan görünümde gizlenebilir.
 - **Tarama:** sonunda özet satırı (işlenen, yazılan, atlanan, hata). Hata oranı %20'yi aşarsa iş kırmızı biter. `set -o pipefail` kullan (Faz 0: mevcut `scan.yml`'de yok, 14 Ağustos–10 Ekim arası ~24 koşu DB'ye hiç yazmadan yeşil bitti), log'u repoya commit'leme, artifact olarak yükle. DB'ye yazılan kayıt sayısı 0 ise iş kırmızı biter.
-- **Evren:** resmi Borsa İstanbul CSV'si. Actions'ta erişilemezse sessizce eski listeye düşme, hata ver. **Dikkat (Faz 0):** CSV'deki `XYLDZ` endeks kodu Yıldız Pazar'ın tamamı değil (bugün 149 hisse; Temmuz 2026'da Yıldız Pazar'a geçen CGCAM, MERIT, NETCD, YATAS XYLDZ'de yok). **Karar (13 Ekim): evren `XYLDZ`.** Endeks kodu kodda sabit değil, ayardır (genişletmek tek satır + daha uzun ilk dolum). Gerekçe: İş Yatırım yavaş, XUTUM (582) ilk dolumu günler sürer ve çok sayıda işlem görmeyen hisse boş veri sorununu artırır. 149 hisselik evrende "en az 8 hisse" kuralı küçük sektör gruplarının birleştirilmesini gerektirir (bölüm 3). Sitedeki ~290 hisse: v2 sitesi her hissenin **en son koşusunu ne kadar eski olursa olsun** gösteriyor (`app.py` `load_latest_pillar_scores`), bu yüzden Ağustos'taki 270–288 hisselik taramalardan kalan, evrende artık olmayan hisseler de listeleniyor. v3'te evren dışı hisseler gösterilmez.
+- **Evren:** resmi Borsa İstanbul CSV'si. Actions'ta erişilemezse sessizce eski listeye düşme, hata ver. **Dikkat (Faz 0):** CSV'deki `XYLDZ` endeks kodu Yıldız Pazar'ın tamamı değil (bugün 149 hisse; Temmuz 2026'da Yıldız Pazar'a geçen CGCAM, MERIT, NETCD, YATAS XYLDZ'de yok). **Karar (13 Ekim): evren `XYLDZ`.** Endeks kodu kodda sabit değil, ayardır (genişletmek tek satır + daha uzun ilk dolum). Gerekçe: İş Yatırım yavaş, XUTUM (582) ilk dolumu günler sürer ve çok sayıda işlem görmeyen hisse boş veri sorununu artırır. 149 hisselik evrende "en az 8 hisse" kuralı küçük sektör gruplarının birleştirilmesini gerektirir (bölüm 3). Sitedeki ~290 hisse: v2 sitesi her hissenin **en son koşusunu ne kadar eski olursa olsun** gösteriyor (`app.py` `load_latest_pillar_scores`), bu yüzden Ağustos'taki 270–288 hisselik taramalardan kalan, evrende artık olmayan hisseler de listeleniyor. v3'te evren dışı hisseler gösterilmez. **BIST100 önceliği (13 Ekim):** CSV'de XU100 bilgisi var ve XU100'ün 100 hissesinin tamamı XYLDZ içinde; dolum sırası önce XU100 (100), sonra kalan XYLDZ (49). "Öncelikli" işareti yalnızca dolum sırasını belirler ve her evren güncellemesinde yeniden hesaplanır (seçenek A): BIST100'den çıkan hisse XYLDZ'de kaldıkça skorlanır, yalnızca önceliğini kaybeder. Üyelik tarih damgasıyla saklanır (`universe_member`). XYLDZ'den de çıkan hisse güncellenmez ve gösterilmez, ham verisi silinmez.
 - **Şeffaflık:** her hissede hangi metrikler hesaplanabildi, hangileri hangi kaynaktan geldi görünür.
 
 ## 10. Yayın kuralı (v3 canlıya almadan önce)
@@ -124,7 +139,7 @@ Yetişmezse bırakma sırası: backlog → sigorta/GYO/holding → bankalar. Asl
 
 ## 12. Açık sorular (Claude Code ile doğrula, varsayma)
 
-> Faz 0'da cevaplandı: `docs/faz0/faz0-raporu.md` bölüm 5. Açık kalan: ana finansal kaynak yfinance mı İş Yatırım mı (bölüm 9, KESİNLEŞMEDİ); KAP verisinin kullanım koşulları; sigorta ailesinin kalem tanımları.
+> Faz 0'da cevaplandı: `docs/faz0/faz0-raporu.md` bölüm 5. Açık kalan: ana finansal kaynak ve fiyat kaynağı (bölüm 9, karar bekliyor; aday KAP); KAP verisinin kullanım koşulları; TMS 29 birim kuralının 10 hissede doğrulanması; sigorta ailesinin kalem tanımları.
 
 - İş Yatırım'dan çeyreklik tablolar, nakit akışı kalemleri, faiz gideri ve banka metrikleri geliyor mu?
 - Pay sayısı hangi kaynaktan alınacak?

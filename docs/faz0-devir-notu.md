@@ -85,15 +85,14 @@ Açık kalanlar:
 
 ## Sonraki oturum ilk olarak ne yapmalı
 
-1. `git pull` + `git switch faz0-veri-testi`; bu devir notunu ve `docs/faz0/faz0-raporu.md`'yi oku.
-2. 13 Ekim ek incelemesi: teyit soruları cevaplandı, belge güncellendi (rapor bölüm 7, LEARNING 0.13–0.19).
-3. **Kullanıcı kararı bekleyen:** finansal tablolar için ana kaynak yfinance mı İş Yatırım mı (`docs/scoring-v3.md` §9, "KESİNLEŞMEDİ"; yfinance 'tam' 6/16).
-4. `.faz0/`'ı `.gitignore`'a eklemeyi öner (ham deneme çıktıları, repoya girmemeli).
-5. **Faz 1'e geçmeden önce** yasal kaynak sorusunu kapat: KAP (MKK) ve Borsa İstanbul'a yazılı
-   soru taslağı hazırla (KAP verisinden türetilmiş metrik yayınlama; gün sonu fiyatı / evren listesi yayını).
-   Bu cevap gelmeden v3 veri katmanı tasarlanmamalı.
-6. `scan.yml`'deki pipefail hatası canlıyı etkiliyor; Faz 0 kapsamı dışında ama kullanıcıya ayrı bir
-   düzeltme olarak önerilmeli (onaysız değiştirme).
+1. `git pull` + `git switch v3-dev` (v3 iskeleti burada; `faz0-veri-testi` Faz 0'ın kendisi).
+2. Oku: bu not, `docs/faz0/faz0-raporu.md` bölüm 7–8, `LEARNING.md` 0.20–0.26.
+3. **Kullanıcı kararı bekleyenler:** ana finansal kaynak (aday KAP; İş Yatırım ve Yahoo'ya otomatik istek
+   YASAK, kullanıcı söyleyene kadar), fiyat kaynağı, KAP kullanım koşulları (kullanıcı elle bakacak).
+4. Kullanıcıdan: Neon v3-dev branch bağlantı değişkeninin adı; `data/tufe/tufe_v1.csv` değerleri.
+5. Yeni istek atmadan yapılabilecek: KAP dosyalarındaki karşılaştırmalı sütunlarla TMS 29 birim kuralını
+   10 hissede doğrula (dosyalar yalnızca bu bilgisayarda `.faz0/kap_fz/raw/`, repoda yok).
+6. `scan.yml`'deki pipefail hatası canlıyı etkiliyor; ayrı düzeltme olarak öner (onaysız değiştirme).
 
 ---
 

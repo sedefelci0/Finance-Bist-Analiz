@@ -275,3 +275,56 @@ güncel dönemde gereken üç sütun aynı birimde (Haziran 2026 TL'si); tekil �
 ### Adım 0.19 — Belge güncellendi, README taslağı yazıldı
 `docs/scoring-v3.md` (onaylı öneriler + üç karar), `docs/readme-taslak.md` (İngilizce; bazı cümleler henüz
 uygulanmamış v3 davranışını anlatıyor, v3 yayına girene kadar README'ye taşınmamalı).
+
+## 13 Ekim 2026 (3) — Kaynak koşulları kararı, v3-dev iskeleti, KAP fizibilitesi
+
+### Kullanıcı kararları
+- Kaynak koşulları bulgusu planı değiştirdi: **İş Yatırım ana kaynak kararı beklemede**; İş Yatırım'a ve
+  Yahoo'ya kullanıcı söyleyene kadar otomatik istek yok.
+- Onaylanan: şema (ayrı Neon branch'i), normalizasyon (TÜFE = elle doldurulan versiyonlu CSV, borsapy yok),
+  Altman diff'i, `v3-dev` dalı, §3 grupları, BIST100 seçenek A.
+- Dolum (4) beklemede: yalnızca kaynak bağımsız arayüz + iskelet + sahte veriyle test.
+- Neon v3-dev branch'ini kullanıcı panelden açıp bağlantıyı yerel `.env`'e ayrı değişkenle yazacak; canlı v2'ye dokunulmaz.
+
+### Adım 0.20 — `faz0-veri-testi` push edildi, `v3-dev` açıldı
+**Neden ayrı dal:** v3 kodu master'dan ve v2 skor kodundan (`scoring/`, `providers/`, `app.py`) tamamen ayrı
+durmalı; yeni kod yalnızca `v3/`, `tests/v3/`, `data/tufe/` altında.
+
+### Adım 0.21 — Dolum iskeleti (`v3/fill.py`) gerçek kaynaksız yazıldı
+**Neden:** kaynak kararı beklerken dolumun mantığı (hız sınırı, tekrar deneme, kaldığı yerden devam, önbellek,
+"0 kalem → 3 deneme → kaynakta_yok → devam") kaynaktan bağımsız test edilebilir. Sağlayıcı ve depo birer
+arayüz (Protocol); testte sahte sağlayıcı + bellek içi depo, sahte saat (gerçek bekleme yok).
+"kaynakta_yok" ve "ok" sonuçları önbellekten atlanır; "hata" bir sonraki çalıştırmada yeniden denenir.
+
+### Adım 0.22 — Normalizasyon (`v3/normalize.py`): birim tarihi tahmin edilmez
+**Neden:** Faz 0'da birim kuralı yalnızca ASELS ile kanıtlandı. Fonksiyon birim tarihini çağırandan alıyor;
+TÜFE ayı eksikse hata veriyor (sessiz tahmin yok); TÜFE CSV'sinde kaynak bağlantısı zorunlu.
+`data/tufe/tufe_v1.csv` yalnızca başlık satırıyla eklendi — değerleri kullanıcı elle dolduracak.
+TTM kümülatif formülü ASELS 2026/6 satışıyla test edildi (230.027.448.000 TL, üç sütun Haziran 2026 TL'si).
+
+### Adım 0.23 — Şema dosyası yazıldı, hiçbir veritabanına uygulanmadı
+`v3/db/schema.sql` (5 tablo, `universe_member` dahil). **Açık soru:** kullanıcının `.env`'e yazacağı Neon
+v3-dev değişkeninin adı — bilinmeden şemayı uygulayan kod yazılmadı.
+
+### Adım 0.24 — Altman B: dönem kârı DAHİL
+**Neden:** Altman (2000) retained earnings'i "the total amount of reinvested earnings and/or losses of a firm
+over its entire life" diye tanımlıyor (Ward's alıntısı; NYU'daki birincil PDF 500 hatası verdi, birebir metin
+doğrulanamadı). "Tüm ömür" cari dönem kârını da kapsar → `Geçmiş Yıllar Kar/Zararları + Kardan Ayrılan
+Kısıtlanmış Yedekler + Dönem Net Kar/Zararı`.
+
+### Adım 0.25 — §3 grupları KAP alt sektörüyle hesaplandı
+**Neden:** 149 hisselik evrende sanayi ailesinin 21 alt sektöründen yalnızca 5'i ≥ 8 hisse. Birleştirmeler önerildi
+ve onaylandı (8 grup). Kaynak kap-mcp'nin statik KAP taksonomisi (Nisan 2026, yeni istek yok). MASFN listede
+yoktu; KAP şirket sayfasından "ELEKTRİK GAZ VE SU" → Enerji grubu (15).
+
+### Adım 0.26 — KAP fizibilitesi: hız sınırına takıldık, yavaşlattık, kendi hatamızı düzelttik
+**Ne oldu:** 6 sn arayla 9 indirmeden sonra KAP bağlantıyı kesti → toplama durduruldu, 15 dk istek atılmadı,
+tek deneme isteği başarılı. 30 sn arayla devam edildi. İkinci durma KAP'tan değil **bizden**di: GLRMK 2023
+için KAP 22 baytlık boş ZIP döndürdü, script ayrıştırma hatasını ağ hatası sayıp "üst üste 2 hata" kuralıyla
+kendini durdurdu. Düzeltme: boş ZIP / ayrıştırma hatası = kaynakta_yok (tekrar yok), yalnız ağ hataları sayılır;
+her dönemden sonra kayıt (kaldığı yerden devam).
+**Neden 30 sn:** kullanıcının alt sınırı 5 sn idi; 6 sn'de sınıra takıldık. Daha hızlısı denenmedi — sınırı
+zorlamak yerine güvenli bilinen hızı raporladık.
+**Sonuç:** 177/180 dosya; sanayi 16 hissede Z-Score, Piotroski ve TTM girdileri 16/16 tam (yfinance'te 6/16).
+Bankalarda nakit akışı var, takipteki kredi ve SYR yok.
+**KAP kullanım koşulları:** ana sayfadaki bağlantılarda bulunamadı; kullanıcı elle bakacak.
