@@ -1,0 +1,6 @@
+check,url,status,bytes,seconds,content_type,csv_rows,csv_unique_E,csv_XYLDZ,csv_XUTUM,items
+borsa_istanbul_csv,https://www.borsaistanbul.com/datum/hisse_endeks_ds.csv,200,433215,0.34,application/octet-stream,5782.0,591.0,149.0,582.0,
+isyatirim_malitablo,https://www.isyatirim.com.tr/_layouts/15/IsYatirim.Website/Common/Data.aspx/MaliTablo,200,28264,10.41,application/json; charset=utf-8,,,,,147.0
+kap_home,https://www.kap.org.tr/tr/,200,163124,0.18,text/html; charset=utf-8,,,,,
+kap_company_list,https://www.kap.org.tr/tr/bist-sirketler,200,1540724,0.15,text/html; charset=utf-8,,,,,
+yahoo_chart,https://query1.finance.yahoo.com/v8/finance/chart/THYAO.IS?range=5d&interval=1d,200,1476,0.31,application/json;charset=utf-8,,,,,

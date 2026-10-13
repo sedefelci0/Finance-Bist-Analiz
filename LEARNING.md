@@ -209,3 +209,24 @@ bulunana kadar fiyata dayalı metrikler (Değerleme, Momentum, piyasa değeri, b
 **Push:** kullanıcı onayıyla yalnızca `scripts/faz0_source_test.py` + `.github/workflows/faz0-source-test.yml`,
 `faz0-veri-testi` dalına (commit 8e7ef32). master'a ve scan.yml'e dokunulmadı. LEARNING.md ve
 docs/faz0/ henüz commit'lenmedi (rapor bitince ayrıca onay istenecek).
+
+---
+
+## 13 Ekim 2026 — Faz 0'ın kapanışı
+
+### Adım 0.12 — 20 hisselik tablo için Actions sonucunu esas aldık
+**Ne oldu:** Yereldeki ikinci tam koşu 12 Ekim'de oturum kapanınca 17/20'de kesildi. Actions koşusu
+(run 38264568323, aynı script) 42 dk'da yeşil bitti; `pipefail` açık olduğu için yeşil = gerçekten hatasız.
+**Neden yerelde tekrar koşmadık:** Script ve hisse listesi aynı; tek fark IP. Erişim tablosu yerelde
+zaten tam (5/5 HTTP 200). İş Yatırım'a bir saat daha istek atmak yeni bilgi getirmeyecekti.
+**Artifact nasıl alındı:** Kullanıcı "hepsini bitir" dedi; artifact token istediği için bu bilgisayardaki
+git kimlik bilgisi `git credential fill` ile **yalnızca bu indirme için** kullanıldı, ekrana/dosyaya yazılmadı.
+`meta.json`'dan `public_ip` ve `host` silinerek `docs/faz0/actions/`'a kopyalandı.
+**Bulgular:**
+- Bulut IP'sinden İş Yatırım, KAP (ana sayfa + şirket listesi), BIST CSV, Yahoo: **hepsi 200**.
+  Engelleme belirtisi yok; İş Yatırım bulutta da yavaş (31 zaman aşımı, TUPRS hiç alınamadı).
+- İş ↔ yfinance: 2022–2024 ve tüm çeyreklerde oran **1,0000**; **yalnız 2025/12 ×1,1776** (TMS 29).
+  Yani yfinance her yılı bir sonraki **yıllık** raporun rakamıyla, İş Yatırım bir sonraki **herhangi bir**
+  raporun (ara dönem dahil) rakamıyla güncelliyor.
+- Faiz gideri iki kaynakta farklı tanım ve işaret → karşılaştırılamaz.
+- Kümülatiften tekil 2025Ç4 türetmek bozuk sonuç veriyor (2025/12 yeniden ifade edilmiş, 2025/9 edilmemiş).

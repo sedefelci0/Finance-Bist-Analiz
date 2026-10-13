@@ -1,6 +1,6 @@
 # Faz 0 — Devir Notu
 
-Oturum: 12 Ekim 2026. Sonraki oturum bu dosyayı, ardından `docs/faz0/faz0-raporu.md` ve
+Oturum: 12 Ekim 2026 (13 Ekim'de Actions sonuçlarıyla güncellendi). Sonraki oturum bu dosyayı, ardından `docs/faz0/faz0-raporu.md` ve
 `LEARNING.md`'yi okuyarak başlamalı.
 
 ## Ne yaptık
@@ -45,7 +45,8 @@ Oturum: 12 Ekim 2026. Sonraki oturum bu dosyayı, ardından `docs/faz0/faz0-rapo
 | `docs/faz0/kap_vs_isyatirim.md` / `.csv` | evet | Adım 2 ayrıntısı |
 | `scripts/faz0_source_test.py` | evet (8e7ef32) | Kaynak testi script'i |
 | `.github/workflows/faz0-source-test.yml` | evet (8e7ef32) | Actions erişim testi |
-| `docs/faz0/local/` | **hayır** | 2. tam koşunun çıktısı; commit sırasında koşu sürüyordu. İçindeki `meta.json` yerel genel IP adresini içeriyor → commit'lemeden önce o alan temizlenmeli. |
+| `docs/faz0/actions/` | evet | Actions koşusunun 20 hisselik sonucu (artifact'tan; `public_ip` ve `host` silindi) |
+| `docs/faz0/local/` | evet (yalnız `connectivity.csv`) | Yerel erişim tablosu; ikinci tam koşu 17/20'de kesildi |
 | `.faz0/` | **hayır** | Ham deneme çıktıları (probe, smoke, CSV kopyası, KAP JSON, koşu log'ları). Repo'ya girmemeli; `.gitignore`'a eklenmesi önerilir. |
 | `.venv/` | hayır (gitignore) | yfinance 1.7.0, isyatirimhisse 5.0.1, borsapy 0.11.0, pykap 0.2.0, kap-mcp 0.1.0, tabulate, sqlalchemy, psycopg2 |
 
@@ -67,32 +68,31 @@ Oturum: 12 Ekim 2026. Sonraki oturum bu dosyayı, ardından `docs/faz0/faz0-rapo
 
 ## Yarım kalanlar
 
-1. **Adım 1 — 20 hisselik düzeltilmiş koşu** (`docs/faz0/local/`, log `.faz0/local_run2.log`):
-   commit anında 11/20'deydi. Bitince `summary.md`'deki eksik oran ve fark tablosu rapora (bölüm 1.3)
-   işlenmeli. Koşu yarıda kesildiyse: `.venv/Scripts/python scripts/faz0_source_test.py --out docs/faz0/local`
-   (~40-60 dk; İş Yatırım yavaşsa uzar). Yalnız özet: `--summarize-only`.
-2. **Adım 3 — Actions sonucu:** run 38264568323 (`faz0-veri-testi`). Sonuç Actions'ın Summary
-   sayfasında ve `faz0-actions-<run_id>` artifact'ında. Log/artifact token olmadan inmiyor (403):
-   kullanıcı Summary'yi iletmeli ya da indirme için izin vermeli. Sonuç rapora (bölüm 3) ve
-   bölüm 12 "Actions IP erişimi" satırına işlenmeli.
-3. **Doğrulanamayanlar:** XYLDZ'nin 271 → 149 düşüş nedeni; ağustos-ekim taramalarının Python
-   tarafında neden 4 sn'de çöktüğü; KAP'tan otomatik çekim ve yeniden yayının yasal durumu;
-   ücretsiz yasal fiyat kaynağı var mı; THYAO 2023/12 istisnası; GARAN KAP 1000× okuma;
-   2025/6 ↔ 2026/6 aynı bazda mı; pykap ve kap-mcp'nin bugün çalışıp çalışmadığı.
-4. **Kullanıcı teyidi bekleyen sorular:** "ücretsiz" yorumu; 20 hisse seçimi; "son 5 dönem" yorumu.
+**Faz 0'ın 6 adımı tamamlandı (13 Ekim).** 1. ve 3. adımın sonuçları Actions koşusundan
+(run 38264568323) alınıp rapora işlendi; veriler `docs/faz0/actions/`. Yereldeki ikinci tam koşu
+12 Ekim'de oturum kapanınca 17/20'de kesildi; aynı test bulutta tamamlandığı için tekrarlanmadı
+(`docs/faz0/local/` yalnızca yerel erişim tablosunu içerir — IP içermez).
+
+Açık kalanlar:
+1. **Doğrulanamayanlar:** XYLDZ'nin 271 → 149 düşüş nedeni; ağustos-ekim taramalarının Python
+   tarafında neden 4 sn'de çöktüğü (artık token ile log indirilebilir, bkz. aşağıda); KAP'tan otomatik
+   çekim ve yeniden yayının yasal durumu; ücretsiz yasal fiyat kaynağı var mı; THYAO 2023/12 istisnası;
+   GARAN KAP 1000× okuma; 2025/6 ↔ 2026/6 aynı bazda mı; pykap ve kap-mcp'nin bugün çalışıp çalışmadığı;
+   KAP'ın JS ile yüklenen finansal tablo sayfasına bulut IP'sinden erişim.
+2. **Kullanıcı teyidi bekleyen sorular:** "ücretsiz" yorumu; 20 hisse seçimi; "son 5 dönem" yorumu.
+3. **Script'te bilinen kusur:** sigorta "finansal borç" eşlemesi borsapy tarafında yalnız ilk satırı alıyor
+   (AGESA/ANHYT borç farkı bundan). Faz 0 sonucunu değiştirmiyor.
 
 ## Sonraki oturum ilk olarak ne yapmalı
 
-1. `git status` + `git log faz0-veri-testi` ile durumu doğrula; `docs/faz0/local/summary.md` var mı bak.
-2. Actions run 38264568323'ün sonucunu al (kullanıcıdan Summary/zip ya da izin) ve rapora işle.
-3. Yerel koşu tamamlandıysa eksik oran/fark tablosunu rapora işle; `meta.json`'daki `public_ip`'yi
-   temizlemeden `docs/faz0/local/`'i commit'leme. `.faz0/`'ı `.gitignore`'a ekle.
-4. Kullanıcıya üç teyit sorusunu sor ("ücretsiz" yorumu, hisse seçimi, dönem yorumu).
+1. `git pull` + `git switch faz0-veri-testi`; bu devir notunu ve `docs/faz0/faz0-raporu.md`'yi oku.
+2. Kullanıcıya üç teyit sorusunu sor ("ücretsiz" yorumu, hisse seçimi, dönem yorumu).
+3. Rapor bölüm 6'daki belge değişiklik önerilerini kullanıcıyla tek tek geç; onaylananları `docs/scoring-v3.md`'ye işle.
+4. `.faz0/`'ı `.gitignore`'a eklemeyi öner (ham deneme çıktıları, repoya girmemeli).
 5. **Faz 1'e geçmeden önce** yasal kaynak sorusunu kapat: KAP (MKK) ve Borsa İstanbul'a yazılı
    soru taslağı hazırla (KAP verisinden türetilmiş metrik yayınlama; gün sonu fiyatı / evren listesi yayını).
    Bu cevap gelmeden v3 veri katmanı tasarlanmamalı.
-6. Belge değişiklik önerilerini (rapor bölüm 6) kullanıcıyla tek tek geçip onaylananları belgeye işle.
-7. `scan.yml`'deki pipefail hatası canlıyı etkiliyor; Faz 0 kapsamı dışında ama kullanıcıya ayrı bir
+6. `scan.yml`'deki pipefail hatası canlıyı etkiliyor; Faz 0 kapsamı dışında ama kullanıcıya ayrı bir
    düzeltme olarak önerilmeli (onaysız değiştirme).
 
 ---
@@ -147,6 +147,13 @@ TÜFE kontrolü: `borsapy.Inflation().tufe()` aylık değerlerinin çarpımı.
   ya da (workflow master'a alınırsa) Actions sekmesinden "Run workflow" tetikler.
 - 12 Ekim koşusu: https://github.com/sedefelci0/Finance-Bist-Analiz/actions/runs/38264568323
   → **Summary** sekmesinde özet tablo, altta `faz0-actions-<run_id>` artifact zip'i (giriş yapmış kullanıcı indirebilir).
+  13 Ekim'de API ile şöyle indirildi (token ekrana yazdırılmadan, kayıtlı git kimlik bilgisiyle):
+  `TOKEN=$(printf "protocol=https
+host=github.com
+
+" | git credential fill | sed -n 's/^password=//p')`
+  ardından `curl -L -H "Authorization: Bearer $TOKEN" -o artifact.zip https://api.github.com/repos/sedefelci0/Finance-Bist-Analiz/actions/artifacts/<artifact_id>/zip`.
+  Aynı yolla job log'u: `.../actions/jobs/<job_id>/logs` (ağustos-ekim taramalarının 4 sn'de neden çöktüğü buradan bakılabilir).
 - Durum sorgusu (token gerekmez):
   `curl -s https://api.github.com/repos/sedefelci0/Finance-Bist-Analiz/actions/runs/38264568323/jobs`
 

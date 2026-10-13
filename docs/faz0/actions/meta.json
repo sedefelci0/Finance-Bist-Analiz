@@ -1,0 +1,2386 @@
+{
+ "env": {
+  "utc": "2026-10-12T14:40:28+00:00",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "python": "3.12.15",
+  "github_actions": true
+ },
+ "tickers": {
+  "THYAO": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "USD",
+    "sharesOutstanding": 1372283353,
+    "impliedSharesOutstanding": 1372283353,
+    "sector": "Industrials",
+    "industry": "Airlines"
+   }
+  },
+  "ASELS": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 4560000000,
+    "impliedSharesOutstanding": 4560000000,
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense"
+   }
+  },
+  "TMSN": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 115000000,
+    "impliedSharesOutstanding": 115000000,
+    "sector": "Industrials",
+    "industry": "Farm & Heavy Construction Machinery"
+   }
+  },
+  "GLRMK": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": null,
+    "sharesOutstanding": 322600000,
+    "impliedSharesOutstanding": 322600000,
+    "sector": "Industrials",
+    "industry": "Engineering & Construction"
+   }
+  },
+  "GARAN": {
+   "isy_group": "UFRS_K",
+   "family": "bank",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2021,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 4200000000,
+    "impliedSharesOutstanding": 4200000000,
+    "sector": "Financial Services",
+    "industry": "Banks - Regional"
+   }
+  },
+  "AKBNK": {
+   "isy_group": "UFRS_K",
+   "family": "bank",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2021,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "UFRS_K",
+     "rows": 192,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 5200000000,
+    "impliedSharesOutstanding": 5200000000,
+    "sector": "Financial Services",
+    "industry": "Banks - Regional"
+   }
+  },
+  "AGESA": {
+   "isy_group": "UFRS_K",
+   "family": "insurance",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2021,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 180000000,
+    "impliedSharesOutstanding": 180000000,
+    "sector": "Financial Services",
+    "industry": "Insurance - Diversified"
+   }
+  },
+  "ANHYT": {
+   "isy_group": "UFRS_K",
+   "family": "insurance",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2021,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "UFRS_K",
+     "rows": 409,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 430000000,
+    "impliedSharesOutstanding": 430000000,
+    "sector": "Financial Services",
+    "industry": "Insurance - Life"
+   }
+  },
+  "KCHOL": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 2
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 2
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 2535007575,
+    "impliedSharesOutstanding": 2535007575,
+    "sector": "Industrials",
+    "industry": "Conglomerates"
+   }
+  },
+  "SAHOL": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 2
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 3
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 2
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 2
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 2
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 2067834969,
+    "impliedSharesOutstanding": 2067834969,
+    "sector": "Financial Services",
+    "industry": "Banks - Regional"
+   }
+  },
+  "EKGYO": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 2
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 3
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 3661120138,
+    "impliedSharesOutstanding": 3661120139,
+    "sector": "Real Estate",
+    "industry": "REIT - Residential"
+   }
+  },
+  "ISGYO": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 958750000,
+    "impliedSharesOutstanding": 958750000,
+    "sector": "Real Estate",
+    "industry": "REIT - Diversified"
+   }
+  },
+  "BIMAS": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 2
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 2
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 1185780000,
+    "impliedSharesOutstanding": 1185780000,
+    "sector": "Consumer Defensive",
+    "industry": "Grocery Stores"
+   }
+  },
+  "TUPRS": {
+   "isy_group": "",
+   "family": "unknown",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2021,
+     "group": "UFRS_K",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2021,
+     "group": "UFRS_K",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2021,
+     "group": "UFRS_K",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    },
+    {
+     "year": 2021,
+     "group": "UFRS",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 1
+    },
+    {
+     "year": 2021,
+     "group": "UFRS",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 2
+    },
+    {
+     "year": 2021,
+     "group": "UFRS",
+     "error": "No financial data was fetched for any symbol. Please check your parameters.",
+     "attempt": 3
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 1926795598,
+    "impliedSharesOutstanding": 1926795598,
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing"
+   }
+  },
+  "EREGL": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 6721875999,
+    "impliedSharesOutstanding": 6721876000,
+    "sector": "Basic Materials",
+    "industry": "Steel"
+   }
+  },
+  "FROTO": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 3509100000,
+    "impliedSharesOutstanding": 3509100000,
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers"
+   }
+  },
+  "TCELL": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 2176442555,
+    "impliedSharesOutstanding": 2176442556,
+    "sector": "Communication Services",
+    "industry": "Telecom Services"
+   }
+  },
+  "ENKAI": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "USD",
+    "sharesOutstanding": 5862743582,
+    "impliedSharesOutstanding": 5862743583,
+    "sector": "Industrials",
+    "industry": "Engineering & Construction"
+   }
+  },
+  "ULKER": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 369275855,
+    "impliedSharesOutstanding": 369276000,
+    "sector": "Consumer Defensive",
+    "industry": "Confectioners"
+   }
+  },
+  "SISE": {
+   "isy_group": "XI_29",
+   "family": "industrial",
+   "isy_events": [
+    {
+     "year": 2021,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2022,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2023,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2024,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2025,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    },
+    {
+     "year": 2026,
+     "group": "XI_29",
+     "rows": 147,
+     "attempt": 1
+    }
+   ],
+   "bpy_events": [
+    {
+     "stmt": "balance_sheet",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "balance_sheet",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "income_stmt",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": false,
+     "cols": [
+      "2025",
+      "2024",
+      "2023",
+      "2022"
+     ]
+    },
+    {
+     "stmt": "cashflow",
+     "quarterly": true,
+     "cols": [
+      "2026Q2",
+      "2026Q1",
+      "2025Q4",
+      "2025Q3"
+     ]
+    }
+   ],
+   "yf_meta": {
+    "currency": "TRY",
+    "financialCurrency": "TRY",
+    "sharesOutstanding": 2992436056,
+    "impliedSharesOutstanding": 2992436056,
+    "sector": "Industrials",
+    "industry": "Conglomerates"
+   }
+  }
+ }
+}

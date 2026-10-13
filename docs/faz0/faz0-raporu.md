@@ -1,10 +1,10 @@
 # Faz 0 Raporu — Veri kaynakları ve evren
 
-Tarih: 12 Ekim 2026. Karar belgesi: `docs/scoring-v3.md`. Adım adım gerekçeler: `LEARNING.md`.
+Tarih: 12 Ekim 2026 (Actions sonuçları 13 Ekim'de eklendi). Karar belgesi: `docs/scoring-v3.md`. Adım adım gerekçeler: `LEARNING.md`.
 
-> **Durum:** 2, 4, 5 ve 6. adımlar tamamlandı. 1. adımın 20 hisselik düzeltilmiş koşusu ve
-> 3. adımın Actions koşusu rapor yazılırken sürüyordu; sonuçları bu rapora **henüz girmedi**
-> (bkz. `docs/faz0-devir-notu.md`, "Yarım kalanlar").
+> **Durum:** Faz 0'ın 6 adımı tamamlandı. 20 hisselik tablo (1.3) Actions koşusundan
+> (run 38264568323, aynı script) alındı; yereldeki ikinci tam koşu oturum kapanınca 17/20'de
+> kesildi ve tekrarlanmadı (aynı test bulutta tamamlandığı için). Açık kalan sorular bölüm 5 ve devir notunda.
 
 ---
 
@@ -55,14 +55,41 @@ Hiçbir kaynak resmi bir istek sınırı yayınlamıyor.
 - **Para birimi:** yfinance `financialCurrency` THYAO ve ENKAI için **USD** (fiyat TRY). THYAO'da
   İş/yfinance oranı ≈ USD/TRY kuru.
 - **En güncel dönem:** Haziran 2026 (2026/6) İş Yatırım, borsapy ve yfinance çeyrekliğinde mevcut
-  (ilk koşuda 20 hissenin 18'inde İş'te görüldü; eksikler zaman aşımı kaynaklıydı). yfinance yıllıkta
+  (Actions koşusunda 20 hissenin 19'unda İş ve borsapy'de, 20'sinde yfinance çeyreklikte; TUPRS zaman aşımı). yfinance yıllıkta
   en güncel 2025/12 (TCELL'de 2024/12). Eylül 2026 henüz hiçbir kaynakta yok (beklenen).
 
 ### 1.3 Eksik oran / kaynaklar arası fark tablosu
 
-**Sonuç bekleniyor.** Düzeltilmiş 20 hisselik koşu `docs/faz0/local/` altına
-`summary.md`, `coverage.csv`, `diffs.csv`, `per_ticker.csv`, `raw_values.csv` yazacak.
-İlk koşunun tablosu iki script hatası nedeniyle geçersiz sayılıp silindi (LEARNING.md adım 0.10).
+Kaynak: `docs/faz0/actions/` (`summary.md`, `coverage.csv`, `diffs.csv`, `per_ticker.csv`, `raw_values.csv`).
+Actions koşusu, 12 Ekim 14:40–15:22 UTC. İlk yerel koşunun tablosu iki script hatası nedeniyle
+geçersiz sayılıp silindi (LEARNING.md adım 0.10).
+
+**Eksik oranı** (hedef hücre = hisse × dönem; 0 = tam, 1 = hiç yok). Sanayi 16 hisse, finansal 4 hisse (2 banka, 2 sigorta).
+
+| Aile | Kalem | isyatirimhisse Ç / Y | borsapy Ç / Y | yfinance Ç / Y |
+|---|---|---|---|---|
+| sanayi | 7 kalemin hepsi | 0,10 / 0,11 | 0,25 / 0,25 | 0,06 / 0,20 |
+| finansal | varlık, özkaynak, net kâr | 0 / 0 | 0,20 / 0,20 | 0,15 / 0,20 |
+| finansal | finansal borç, faiz | 0,50 / 0,50 (aileye göre uygulanamaz) | 0,60 / 0,60 | 0,15–0,60 |
+| finansal | satış, işletme nakit akışı | 1 / 1 (tabloda yok) | 1 / 1 | 0,15–0,55 |
+
+Eksiklerin nedeni (kanıtlı):
+- **isyatirimhisse sanayi %10:** tamamı **TUPRS** (1/16 hisse = %6) + tek tük yıllar. TUPRS'te 9 denemenin
+  6'sı İş Yatırım zaman aşımı; koşu boyunca 31 zaman aşımı oldu (yerelde de 17). Kaynak eksik değil, **yavaş/kararsız**.
+- **borsapy %25:** `last_n=5` → 4 dönem (5. dönem sessizce düşüyor, yapısal %20) + TUPRS.
+- **yfinance yıllık %20:** yalnızca 4 yıl veriyor (2021 yok); TCELL'de yıllık en güncel 2024/12.
+- **Finansallarda satış/nakit akışı:** İş tablosunda bu bölümler yok; yfinance bazı bankalarda "Total Revenue" veriyor
+  ama tanımı belirsiz.
+
+**Kaynaklar arası fark:**
+
+| Karşılaştırma | Sonuç |
+|---|---|
+| isyatirimhisse ↔ borsapy | Varlık, özkaynak, net kâr, satış, nakit akışı, faiz: **128/128 birebir** (aynı uç nokta). Borçta 14 fark yalnızca AGESA/ANHYT'de — script'in sigorta eşlemesi (yalnız ilk "Finansal Borçlar" satırı), kaynak farkı değil. |
+| İş ↔ yfinance (TRY raporlayanlar) | 2022–2024 yıl sonları ve **tüm çeyreklerde oran tam 1,0000**. **Tek fark 2025/12: ×1,1776** (varlık, özkaynak, net kâr, satış hepsinde) = TMS 29 katsayısı: İş 2025/12'yi Haziran 2026 raporunun yeniden ifade edilmiş rakamıyla güncellemiş, yfinance yıllık raporun rakamında kalmış. 2021/12 ayrıca tutarsız. |
+| İş ↔ yfinance (THYAO, ENKAI) | Oran yıl sonu USD/TRY kuru: 18,7 (2022) → 29,5 → 46,2 → 50,5 (2025). yfinance tabloları **USD**. |
+| Faiz gideri | Karşılaştırılamaz: İş "Finansman Giderleri" (negatif, kur farkı vb. dahil), yfinance "Interest Expense" (pozitif); %75'inde işaret ters, mutlak oran medyanı ~1,7. |
+| Satış (çeyrek) medyan fark %25 | Kümülatiften tekil çeyreğe çevirirken 2025Ç4 = 2025/12 (yeniden ifade edilmiş) − 2025/9 (edilmemiş) çıkıyor → **bazlar karıştığı için Ç4 bozuk**. |
 
 ---
 
@@ -87,10 +114,21 @@ Ayrıntı: `docs/faz0/kap_vs_isyatirim.md`, ham: `kap_vs_isyatirim.csv`.
 
 - Workflow: `.github/workflows/faz0-source-test.yml`, dal `faz0-veri-testi` (commit 8e7ef32),
   run 38264568323. DB secret'ı yok, repoya commit'lemez, sonuç artifact + Summary sayfası.
-- **Sonuç bekleniyor.**
-- **Dolaylı kanıt (mevcut):** canlı `scan.yml` 11 ve 12 Ekim'de Actions'tan Borsa İstanbul CSV'sine
-  erişti (149 hisse) ve DB'ye 148 hisse yazdı. KAP ve İş Yatırım için bulut erişimi henüz ölçülmedi.
-- Not: Actions log'ları ve artifact'ları token olmadan indirilemiyor (HTTP 403).
+- **Sonuç: koşu yeşil (pipefail açık → gerçekten hatasız), 42 dk. Bulut IP'sinden (Azure, ubuntu runner)
+  beş uç noktanın beşi HTTP 200:**
+
+| Uç nokta | Durum | Süre | Not |
+|---|---|---|---|
+| Borsa İstanbul CSV | 200 | 1,98 sn | 591 hisse, XYLDZ 149, XUTUM 582 (yerelle aynı) |
+| İş Yatırım MaliTablo | 200 | 1,29 sn | 147 kalem; ama koşu boyunca 31 zaman aşımı (10 sn) |
+| KAP ana sayfa | 200 | 1,48 sn | |
+| KAP şirket listesi (`bist-sirketler`) | 200 | 1,57 sn | Statik HTML. KAP `/tr/api/*` ve JS ile yüklenen finansal tablo sayfası bulutta **test edilmedi** |
+| Yahoo chart | 200 | 0,19 sn | |
+
+- 20 hissenin 19'unda İş Yatırım + borsapy verisi geldi (TUPRS hariç, zaman aşımı). Bulutta engelleme belirtisi yok;
+  yerelle aynı sonuçlar.
+- Artifact ve log indirmek token istiyor (HTTP 403); 13 Ekim'de kullanıcının bu bilgisayardaki git kimlik bilgisiyle
+  yalnızca okuma amaçlı indirildi.
 
 ---
 
@@ -120,7 +158,7 @@ Ayrıca `fetch_universe_market_data` yfinance hatasında `except: continue` ile 
 | İş Yatırım'dan çeyreklik tablolar, nakit akışı, faiz gideri, banka metrikleri geliyor mu? | **Çeyreklik: evet** (kümülatif). **Nakit akışı: sanayide evet** (`4C`), banka/sigortada **yok**. **Faiz gideri:** sanayide yalnızca "Finansman Giderleri" (`4BB`/`3HC`, saf faizden geniş), bankada "Faiz Giderleri" (`3B`). **Banka metrikleri:** NFM hesaplanabilir (faiz gelir/gider var), maliyet/gelir kısmen; **SYR yok, takipteki kredi 0**, kredi/mevduat ve özkaynak/aktif hesaplanabilir. Ancak karar gereği İş Yatırım canlıda kullanılmayacak. |
 | Pay sayısı hangi kaynaktan? | Adaylar: İş "Ödenmiş Sermaye" (1 TL nominal → adet; THYAO 1,380 mlr, GARAN 4,2 mlr), yfinance `sharesOutstanding` (THYAO 1,372 mlr — geri alınan paylar düşülmüş olabilir), borsapy (piyasa değeri / fiyat, türetilmiş). **Yasal kaynak kararıyla:** KAP'taki sermaye bilgisi aday; KAP'tan çekilebildiği **doğrulanmadı**. |
 | Karşılaştırma dönemleri TMS 29 bazında aynı bazda mı? | **Hayır.** İş Yatırım her yıl sonunu farklı tarihin TL'si ile veriyor (TÜFE katsayılarıyla kanıtlı); KAP özet sayfası ilk yayımlanan rakamı veriyor. Aynı bazda YoY için cari raporun karşılaştırmalı sütunu kullanılmalı. 2025/6'nın 2026/6 ile aynı bazda olduğu **doğrulanmadı**. |
-| Actions IP'lerinden İş Yatırım, KAP, BIST CSV erişimi? | **BIST CSV: evet** (canlı tarama kanıtı). İş Yatırım ve KAP: **sonuç bekleniyor** (run 38264568323). |
+| Actions IP'lerinden İş Yatırım, KAP, BIST CSV erişimi? | **Evet, üçü de (HTTP 200)**, run 38264568323. İş Yatırım bulutta da yavaş (31 zaman aşımı). KAP'ın JS ile yüklenen finansal tablo sayfası ve `/tr/api/*` uç noktaları bulutta **test edilmedi**. |
 | KAP sektör sınıflandırması: pykap mı kap-mcp mi? | **pykap:** sektör alanı yok. **kap-mcp 0.1.0:** KAP taksonomisini (16 ana → 48 alt sektör) ve 605 şirketlik eşlemeyi statik JSON olarak taşıyor (2026-04-22, tek sürüm, PyPI'da lisans alanı boş). İkisi de çalıştırılarak test edilmedi. **KAP ana sektörü ailelerle uyuşmuyor:** holding, GYO, sigorta, banka hepsi "MALİ KURULUŞLAR"; **SISE "Holdingler"** altında. |
 | Evren: ~290 vs 149 farkı? | Bölüm 4. |
 | Kaynakların kullanım koşulları ve istek sınırları? | Bölüm 1.1. Hiçbiri resmi istek sınırı yayınlamıyor. |
