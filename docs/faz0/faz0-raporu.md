@@ -191,3 +191,77 @@ Ayrıca `fetch_universe_market_data` yfinance hatasında `except: continue` ile 
 9. **§11 Takvim** → Faz 1 "yeni veri katmanı" KAP'a geçişle birlikte 14-18 Ekim'e sığmayabilir;
    yasal teyit (KAP/BIST'e yazılı soru) Faz 1'in önüne konmalı.
 10. **§13 Dürüst sınırlar** → "Veri kaynakları ve lisans durumu" maddesi eklenmeli.
+
+---
+
+## 7. Ek inceleme (13 Ekim 2026)
+
+Kullanıcı kararları: Değerleme ve Momentum yerinde kalır; fiyat yfinance'ten (araştırma/eğitim amaçlı),
+ham veri repoya girmez, sitede yalnızca türetilmiş skor. Evren `XYLDZ`. "Son 5 dönem" yorumu doğru.
+Ham veriler yalnızca yerel `.faz0/` altında (git dışı).
+
+### 7.1 Kaynak koşulları — metin + robots.txt
+
+| Kaynak | Metin (aktarım) | robots.txt |
+|---|---|---|
+| Yahoo / yfinance | yfinance README: *"intended for research and educational purposes"*, *"the Yahoo! finance API is intended for personal use only"*. Yahoo ToS: otomatik erişim *"without our express, prior permission"* yasak; ticari amaçla erişim/yeniden kullanım ve dağıtım yasak. | `query1.finance.yahoo.com`: `Disallow: /` (tüm botlar) |
+| İş Yatırım | *"Bu içeriğe ilişkin tüm telif hakları İş Yatırım Menkul Değerler A.Ş.'ye aittir."*; *"BIST piyasalarında oluşan tüm verilere ait telif hakları tamamen BIST'e ait olup, bu veriler tekrar yayınlanamaz."* Kullanım koşulları sayfası 404. | `Disallow: /_layouts/` — `MaliTablo` bu yolun altında |
+| KAP | Kullanım koşulları metni bulunamadı. | Hata sayfası (666/500) — doğrulanamadı |
+| Borsa İstanbul | Yazılı izinsiz *"kısmen veya tamamen kopya edilemez, uygulamaya konulamaz, dağıtılamaz"*; gecikmeli veri dağıtımı için alt dağıtıcı yetkisi. | `Allow: /` |
+
+Üç soru (kişisel kullanım / türetilmiş sonucu yayınlama / otomatik istek) için metinlerde açık cevap
+bulunmayan her hücre "doğrulanamadı". Hukuki yorum yapılmadı.
+
+### 7.2 Eksiklik matrisi (20 hisse; sanayi 16 · finansal 4)
+
+| Kalem | yfinance | İş Yatırım | KAP özet sayfa |
+|---|---|---|---|
+| geçmiş yıllar kârı | 15 · 4 | 16 · 4 | 0 · 0 |
+| dönen varlıklar | 14 · 0 | 16 · 2 | 16 · 0 |
+| EBIT | 14 · 0 | 16 · 0 | 16 · 0 |
+| işletme nakit akışı | 15 · 2 | 16 · 0 | 0 · 0 |
+| faiz gideri | 15 · 2 | 16 · 2 | 0 · 0 |
+| finansal borç | 15 · 4 | 16 · 2 | 0 · 0 |
+| çeyreklik net kâr | 11 · 1 | 16 · 4 | 16 · 2 (yalnız son ara dönem) |
+| çeyreklik satış | 11 · 1 | 16 · 0 | 16 · 0 |
+| özkaynak | 15 · 4 | 16 · 4 | 16 · 0 |
+
+### 7.3 TTM "veri yok" (AEFES, ARCLK, FROTO, EREGL, ASELS, GARAN)
+
+yfinance'te altısında da 2025-09-30 çeyreğinin gelir tablosu boş (yalnızca nakit akışı dolu); 20 hissede
+bu çeyrek 13'ünde var. `normalizer.get_ttm_financials` bu çeyreği "dolu" sayıyor (herhangi bir akış kalemi
+yeterli), sonra net kâr/satış/EBIT için 4 çeyreğin hepsini arayıp `None` dönüyor. Neden kaynak boşluğu; kod
+yanlış sayı üretmiyor ama "dolu çeyrek" kontrolü yanıltıcı ve telafi yolu yok. GARAN'da ayrıca bankada
+brüt kâr/EBIT hiç yok. KAP köprülemesi devreye girmedi (KAP ile yfinance'in son dönemi aynı); formülü doğru
+ama TMS 29 birimlerini karıştırıyor.
+
+### 7.4 Z-Score / Piotroski girdileri İş Yatırım'dan
+
+Sanayi için türetilebilir. 2024/12'de yfinance ile birebir: Dönen Varlıklar, Kısa Vadeli Yükümlülükler,
+Toplam Yükümlülükler (KV + UV), Brüt Kar, UV Finansal Borçlar (ASELS). Eşleşmeyen: geçmiş yıllar kârı ve
+EBIT (tanım farkı); pay sayısı BIMAS'ta (sonradan bedelsiz). Seçilen tanımlar `docs/scoring-v3.md` §4'te.
+EBIT için `3DF` "FAALİYET KARI (ZARARI)" = KAP "ESAS FAALİYET KARI (ZARARI)" (ASELS 2026/6 birebir);
+TMS 29 net parasal pozisyon bu satırın dışında (KAP raporunda finansman giderlerinden sonra).
+
+### 7.5 TMS 29 birimleri
+
+×1,1776 = TÜFE(Haziran 2026) / TÜFE(Aralık 2025) (Oca–Haz 2026 aylık TÜFE çarpımı 1,1775).
+İş Yatırım 2025/12, 2025/6 ve 2026/6 → Haziran 2026 TL'si (2025/6 KAP karşılaştırmalı sütunuyla birebir: ASELS
+satış 70.956.004 bin TL); 2026/3 → Mart 2026 TL'si (ASELS'te 2026Ç2 = 2026/6 − 2026/3 × 1,0702 = KAP 3 aylık sütunu).
+yfinance 2025/12 yıllık → Aralık 2025 TL'si; 2026Ç2 çeyrekleri çoğu TMS 29 şirketinde KAP 3 aylık sütunu.
+**yfinance ASELS 2026Ç2 hatalı:** satış ve net kâr önceki yılın 6 aylık rakamı. EREGL 2024/12'de iki kaynak ×1,31 farklı.
+Etki: YoY ve büyüme farklı birimdeki sütunlarla bozulur; F/DD ve F/K'da defter değeri/kâr birimi fiyatla
+uyuşmazsa ×1,18'e varan kayma; ROE aynı sütundan hesaplanırsa etkilenmez, kaynak/sütun karışırsa ~%18 kayar.
+
+### 7.6 yfinance "tam" şartı sayımı
+
+Şart: son 5 çeyrek + son 2 yıllık, TRY, gerekli kalemler dolu, en güncel dönem 2026/6 ve 2025/12,
+bilanço özdeşliği %1, makul aralık. **Sanayi: 6/16 geçti** (EKGYO, KCHOL, SISE, TMSN, TUPRS, ULKER).
+Kalanlar: 2025Ç3 boş (ASELS, EREGL, FROTO, ISGYO), para birimi (THYAO USD, ENKAI USD, GLRMK boş),
+UV borç satırı yok (BIMAS, ENKAI), dönen varlık/EBIT yok (SAHOL), 2025 yıllığı yok (TCELL).
+Finansalların hiçbiri geçmiyor (format farkı). **Öneri: finansal tablolar için İş Yatırım tek ana kaynak.**
+
+### 7.7 Sitedeki ~290 hisse
+
+v2 sitesi (`app.py` `load_latest_pillar_scores`) her hissenin en son koşusunu yaş filtresi olmadan gösteriyor;
+Ağustos'taki 270–288 hisselik taramalardan kalan hisseler de listede. 12 Ekim'de DB'de 291 farklı hisse vardı.

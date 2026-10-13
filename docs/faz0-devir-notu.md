@@ -86,8 +86,8 @@ Açık kalanlar:
 ## Sonraki oturum ilk olarak ne yapmalı
 
 1. `git pull` + `git switch faz0-veri-testi`; bu devir notunu ve `docs/faz0/faz0-raporu.md`'yi oku.
-2. Kullanıcıya üç teyit sorusunu sor ("ücretsiz" yorumu, hisse seçimi, dönem yorumu).
-3. Rapor bölüm 6'daki belge değişiklik önerilerini kullanıcıyla tek tek geç; onaylananları `docs/scoring-v3.md`'ye işle.
+2. 13 Ekim ek incelemesi: teyit soruları cevaplandı, belge güncellendi (rapor bölüm 7, LEARNING 0.13–0.19).
+3. **Kullanıcı kararı bekleyen:** finansal tablolar için ana kaynak yfinance mı İş Yatırım mı (`docs/scoring-v3.md` §9, "KESİNLEŞMEDİ"; yfinance 'tam' 6/16).
 4. `.faz0/`'ı `.gitignore`'a eklemeyi öner (ham deneme çıktıları, repoya girmemeli).
 5. **Faz 1'e geçmeden önce** yasal kaynak sorusunu kapat: KAP (MKK) ve Borsa İstanbul'a yazılı
    soru taslağı hazırla (KAP verisinden türetilmiş metrik yayınlama; gün sonu fiyatı / evren listesi yayını).

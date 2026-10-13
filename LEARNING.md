@@ -230,3 +230,48 @@ git kimlik bilgisi `git credential fill` ile **yalnızca bu indirme için** kull
   raporun (ara dönem dahil) rakamıyla güncelliyor.
 - Faiz gideri iki kaynakta farklı tanım ve işaret → karşılaştırılamaz.
 - Kümülatiften tekil 2025Ç4 türetmek bozuk sonuç veriyor (2025/12 yeniden ifade edilmiş, 2025/9 edilmemiş).
+
+## 13 Ekim 2026 (2) — Ek inceleme ve kararlar
+
+### Kullanıcı kararları
+- "Ücretsiz" kararını Değerleme/Momentum'u çıkarmak diye yorumlamamız **yanlıştı**: ikisi de kalıyor,
+  fiyat yfinance'ten (araştırma/eğitim amaçlı), ham veri repoya girmiyor, sitede yalnızca türetilmiş skor.
+- 20 hisse listesi ve "son 5 dönem" yorumu doğru. Evren `XYLDZ`, endeks kodu ayar.
+- EBIT ve geçmiş yıllar kârı tanımları koşullu onaylandı: **kod adına değil Türkçe etikete** göre doğrula.
+
+### Adım 0.13 — Kaynak koşullarına robots.txt eklendi
+**Neden:** "Otomatik istek serbest mi?" sorusuna yazılı koşullar cevap vermiyordu; robots.txt sitenin
+botlara yönelik kendi beyanı. **Bulgu:** Yahoo API alan adı `Disallow: /`, İş Yatırım `Disallow: /_layouts/`
+(MaliTablo bu yolda), KAP hata sayfası, BIST `Allow: /`. Hukuki yorum yapılmadı.
+
+### Adım 0.14 — Eksiklik matrisi için üç kaynaktan yeniden çekim
+**Neden:** önceki tablolar yalnızca 7 kalemi kapsıyordu; geçmiş yıllar kârı, dönen varlık ve EBIT yoktu.
+Ham veriler `.faz0/` altında (git dışı), rapora yalnızca sayılar girdi.
+
+### Adım 0.15 — TTM "veri yok" kodla yeniden üretildi, DB'ye bağlanılmadı
+**Neden:** kullanıcı kuralı "başka yetki gerekirse önce sor" → DB yerine kodun kendi yfinance çağrısını
+tekrarladık. Neden bulundu: yfinance 2025Ç3 gelir tablosu boş + "dolu çeyrek" kontrolü yanıltıcı.
+
+### Adım 0.16 — EBIT: `3HACA` önerimizi geri çektik, `3DF` seçildi
+**Neden:** Türkçe etiketle kontrol edince `3HACA` "Finansman Gideri Öncesi Faaliyet Karı" yatırım faaliyeti
+gelirlerini ve özkaynak yöntemi paylarını içeriyordu (THYAO: 3DF + 3HA + 3HAA + 3HAC = 3HACA). Kullanıcının şartı
+"esas faaliyet düzeyi" idi. `3DF` şirketin KAP'taki "ESAS FAALİYET KARI (ZARARI)" satırıyla birebir; TMS 29
+net parasal pozisyon ASELS'in KAP raporunda bu satırın dışında, finansman giderlerinden sonra.
+**Geçmiş yıllar kârı:** `2OCE` "Geçmiş Yıllar Kar/Zararları" + `2OCD` "Kardan Ayrılan Kısıtlanmış Yedekler";
+"Dönem Net Kar/Zararı" hariç (onaylanan tanım). Altman'ın orijinal tanımında dönem kârının da birikmiş
+kârlara dahil olup olmadığı açık soru olarak duruyor.
+
+### Adım 0.17 — Birim (TMS 29) sorusu KAP raporuyla kapatıldı
+**Neden:** kullanıcı "×1,1776 açıklanmadan tam kuralını kesinleştirme" dedi. ASELS'in KAP'taki 2026/6 finansal
+raporu (borsapy KAP sağlayıcısı ile, tek bildirim) okundu. Kanıt: İş 2025/6 = rapordaki karşılaştırmalı sütun
+(Haziran 2026 TL'si); İş 2026/3 Mart 2026 TL'si (TÜFE Nis–Haz ×1,0702 ile düzeltilince KAP 3 aylık sütunu çıkıyor).
+**Yan bulgu:** yfinance ASELS 2026Ç2 satış ve net kârı önceki yılın 6 aylık rakamı (yanlış etiket).
+
+### Adım 0.18 — yfinance "tam" sayımı: 6/16 → İş Yatırım tek ana kaynak önerildi, kesinleşmedi
+**Neden:** kullanıcı "azsa İş Yatırım'ı tek ana kaynak yapmayı öner" dedi. Kural belgeye yazıldı ama
+"KESİNLEŞMEDİ" işaretiyle; karar kullanıcıda. İş Yatırım kaynaklı TTM için kümülatif formül seçildi, çünkü en
+güncel dönemde gereken üç sütun aynı birimde (Haziran 2026 TL'si); tekil çeyrek toplamı değil.
+
+### Adım 0.19 — Belge güncellendi, README taslağı yazıldı
+`docs/scoring-v3.md` (onaylı öneriler + üç karar), `docs/readme-taslak.md` (İngilizce; bazı cümleler henüz
+uygulanmamış v3 davranışını anlatıyor, v3 yayına girene kadar README'ye taşınmamalı).
