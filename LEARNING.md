@@ -328,3 +328,18 @@ zorlamak yerine güvenli bilinen hızı raporladık.
 **Sonuç:** 177/180 dosya; sanayi 16 hissede Z-Score, Piotroski ve TTM girdileri 16/16 tam (yfinance'te 6/16).
 Bankalarda nakit akışı var, takipteki kredi ve SYR yok.
 **KAP kullanım koşulları:** ana sayfadaki bağlantılarda bulunamadı; kullanıcı elle bakacak.
+
+## 14 Ekim 2026
+
+### Adım 0.27 — TMS 29 birim kuralı yerel KAP dosyalarıyla 16 hissede doğrulandı
+**Neden şimdi:** Kullanıcıdan beklenen girdiler (Neon değişken adı, TÜFE değerleri, KAP koşulları, kaynak
+kararı) gelmedi; yeni istek atmadan yapılabilecek tek açık iş buydu (devir notu madde 5).
+**Nasıl:** kap-mcp'nin HTML ayrıştırıcısı yalnızca "Cari Dönem" sütununu okuyor; sütun bulucu geçici olarak
+"Önceki Dönem" sütununu döndürecek şekilde değiştirilip aynı dosyalar yeniden ayrıştırıldı (paketin kendisi
+değiştirilmedi). Script: `.faz0/tms29_check.py` (yerel, git dışı).
+**Ara hata (bizim):** ilk çalıştırmada bilanço oranları boş geldi — Python'da `"VARLIKLAR".lower()` noktalı
+"i" veriyor, biz noktasız "ı" ile arıyorduk. Türkçe büyük/küçük harf eşlemesi düzeltildi.
+**Sonuç:** 13 şirkette karşılaştırmalı sütun = ilk yayın × TÜFE oranı (1,1776 / 1,1004 / 1,3211 / 1,3089);
+THYAO, EREGL, ENKAI'de oran 1 (TMS 29 uygulamıyor). Kural: bir raporun tüm sütunları raporun dönem sonu TL'siyle.
+**Neden önemli:** v3'te birim tarihi tahmin edilmeden, rapor tarihinden doldurulabilir; YoY/TTM aynı raporun
+karşılaştırmalı sütunundan alınırsa TÜFE dönüşümü hiç gerekmez.

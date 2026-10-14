@@ -336,5 +336,34 @@ Karşılaştırma: yfinance "tam" şartını aynı 16 hissenin 6'sı geçiyordu 
 ### 8.5 Açık kalanlar
 
 KAP'ın kullanım koşulları; fiyat kaynağı (Yahoo durduruldu); kap-mcp'nin tek sürüm ve PyPI'da lisans alanı
-boş olması (README'de MIT); TMS 29 birim kuralının KAP dosyalarındaki karşılaştırmalı sütunlarla 10 hissede
-doğrulanması (dosyalar yerelde, yeni istek gerekmiyor).
+boş olması (README'de MIT); TMS 29 birim kuralı — 14 Ekim'de 16 hissede doğrulandı (bölüm 8.6).
+
+### 8.6 TMS 29 birim kuralı — 16 hissede doğrulandı (14 Ekim)
+
+Yöntem: bölüm 8'de indirilen KAP dosyalarının **"Önceki Dönem"** sütunu, aynı dönemin kendi raporundaki
+**"Cari Dönem"** değeriyle karşılaştırıldı (yeni istek yok; kap-mcp ayrıştırıcısı sütun seçimi değiştirilerek).
+Oran = önceki dönem sütunu / ilk yayın.
+
+| Kontrol | Kalem | 13 TMS 29 şirketi | THYAO, EREGL, ENKAI |
+|---|---|---|---|
+| 2026Ç2 raporunda 2025 yıl sonu | Toplam varlıklar | **1,1776** | 1,0000 |
+| 2026Ç1 raporunda 2025 yıl sonu | Toplam varlıklar | **1,1004** | 1,0000 |
+| 2026Ç2 raporunda 2025'in ilk 6 ayı | Hasılat | **1,3211** (GLRMK 1,3212, BIMAS 1,3210) | 1,0000 |
+| 2025 yılı raporunda 2024 yıl sonu | Toplam varlıklar | **1,3089** (GLRMK 1,3090) | 1,0000 |
+| 2025 yılı raporunda 2024 yılı | Hasılat | **1,3089** (GLRMK 1,3090) | 1,0000 |
+
+13 şirket: ASELS, TMSN, GLRMK, KCHOL, SAHOL, EKGYO, ISGYO, BIMAS, TUPRS, FROTO, TCELL, ULKER, SISE.
+
+**Kural (kanıtlı):** Bir KAP raporundaki tüm sütunlar (cari ve karşılaştırmalı) **o raporun dönem sonunun
+TL'siyle** ifade edilir. Karşılaştırmalı sütun = ilk yayın × TÜFE(rapor dönemi) / TÜFE(ilk yayın dönemi).
+TMS 29 uygulamayan şirketlerde (bu örnekte THYAO, EREGL, ENKAI) oran 1.
+
+**v3 için sonuç:**
+- KAP kaynaklı her değerin birim tarihi = değerin alındığı raporun dönem sonu → `purchasing_power_date`
+  çekimde doldurulabilir; tahmin gerekmez.
+- YoY ve TTM için gereken önceki dönem rakamları, cari raporun karşılaştırmalı sütunundan alınırsa
+  **hiç TÜFE dönüşümü gerekmez** (hepsi aynı birimde). TÜFE dönüşümü yalnızca farklı raporlardan gelen
+  rakamları birleştirirken gerekir.
+- TMS 29 bayrağı otomatik: karşılaştırmalı sütun / önceki raporun cari sütunu ≈ 1 ise uygulamıyor.
+- Faz 0'da gözlenen katsayılar (1,1776 ve 1,3089) şirketlerin kendi raporlarıyla aynı; İş Yatırım'ın
+  2025/12'yi Haziran 2026 TL'siyle vermesi, 2026/6 raporunun karşılaştırmalı sütununu kullanmasıyla açıklanıyor.

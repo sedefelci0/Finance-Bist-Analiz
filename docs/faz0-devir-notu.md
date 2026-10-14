@@ -90,8 +90,7 @@ Açık kalanlar:
 3. **Kullanıcı kararı bekleyenler:** ana finansal kaynak (aday KAP; İş Yatırım ve Yahoo'ya otomatik istek
    YASAK, kullanıcı söyleyene kadar), fiyat kaynağı, KAP kullanım koşulları (kullanıcı elle bakacak).
 4. Kullanıcıdan: Neon v3-dev branch bağlantı değişkeninin adı; `data/tufe/tufe_v1.csv` değerleri.
-5. Yeni istek atmadan yapılabilecek: KAP dosyalarındaki karşılaştırmalı sütunlarla TMS 29 birim kuralını
-   10 hissede doğrula (dosyalar yalnızca bu bilgisayarda `.faz0/kap_fz/raw/`, repoda yok).
+5. ✅ TMS 29 birim kuralı 14 Ekim'de 16 hissede doğrulandı (rapor 8.6, LEARNING 0.27). `scoring-v3.md` §4 için diff kullanıcı onayı bekliyor.
 6. `scan.yml`'deki pipefail hatası canlıyı etkiliyor; ayrı düzeltme olarak öner (onaysız değiştirme).
 
 ---
